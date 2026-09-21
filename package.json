@@ -21,7 +21,9 @@
     "db:studio": "npm run studio -w @ct/db",
     "db:seed": "npm run seed -w @ct/db",
     "build:packages": "npm run build -w @ct/db -w @ct/shared -w @ct/evo -w @ct/whatsapp -w @ct/ai",
-    "evo:testar": "tsx scripts/testar-evo.ts"
+    "evo:testar": "tsx scripts/testar-evo.ts",
+    "base:gerar": "tsx scripts/gerar-base-teste.ts",
+    "base:limpar": "tsx scripts/gerar-base-teste.ts limpar"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
