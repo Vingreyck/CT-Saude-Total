@@ -13,7 +13,7 @@ const Schema = z.object({
   DATABASE_URL: z.string().min(1, 'sem banco nao sobe. No Railway isso vem preenchido'),
 
   EVO_BASE_URL: z.string().min(1).default('https://evo-integracao.w12app.com.br'),
-  EVO_TOKEN: z.string().min(1, 'gere em Configuracoes > Integracoes > Tokens no painel do EVO'),
+  EVO_TOKEN: z.string().optional(),
   EVO_WEBHOOK_SECRET: z.string().optional(),
 
   WHATSAPP_DRIVER: z.enum(['oficial', 'evolution']).default('oficial'),
@@ -38,3 +38,19 @@ if (!resultado.success) {
 }
 
 export const env = resultado.data
+
+/**
+ * A API sobe sem token do EVO, sem WhatsApp e sem chave de IA, de proposito:
+ * da para publicar e ver de pe antes de ter qualquer um dos tres. O aviso no
+ * log diz o que ainda nao funciona, em vez de derrubar o servico.
+ */
+const pendencias: Array<[string, string]> = [
+  ['EVO_TOKEN', 'sem ele nao da para puxar os alunos do EVO (CT-010)'],
+  ['WHATSAPP_ACCESS_TOKEN', 'sem ele nao da para mandar nem receber mensagem (CT-020)'],
+  ['ANTHROPIC_API_KEY', 'sem ela o bot nao conversa nem extrai informacao'],
+]
+const faltando = pendencias.filter(function (par) { return !process.env[par[0]] })
+if (faltando.length > 0) {
+  console.warn('subindo com pendencias:')
+  for (const par of faltando) console.warn('  ' + par[0] + ': ' + par[1])
+}
