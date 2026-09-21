@@ -18,7 +18,7 @@ comum() {
     --set "DATABASE_URL=$PG" \
     --set 'NODE_ENV=production' \
     --set 'TZ=America/Sao_Paulo' \
-    --set 'RAILPACK_INSTALL_CMD=npm ci' >/dev/null
+    --set 'RAILPACK_INSTALL_CMD=npm ci && npm run db:generate' >/dev/null
 }
 
 echo "configurando @ct/api"

@@ -56,42 +56,63 @@ Painel em `http://localhost:3000`, API em `http://localhost:3333/health`.
 
 ## 3. Deploy no Railway
 
-Este é um **monorepo compartilhado** (npm workspaces, pacotes que os três apps usam). Isso muda a configuração e é onde quase todo mundo erra.
+**Já está no ar.** Esta seção registra como ficou e como reproduzir.
 
-**Não use Root Directory.** Se você apontar o Root Directory de um serviço para `apps/api`, o build passa a rodar dentro daquela pasta, onde não existe `package-lock.json` nem os `packages/`, e o install quebra. O build tem que rodar a partir da raiz do repositório, sempre.
+| | |
+|---|---|
+| Projeto | `daring-truth` |
+| Painel | https://ctweb-production-38bf.up.railway.app |
+| API | https://ctapi-production.up.railway.app |
+| Serviços | `@ct/api`, `@ct/worker`, `@ct/web`, `Postgres` |
 
-O que separa um serviço do outro é o **arquivo de configuração**, não a pasta.
+### As três coisas que quebraram, e por quê
 
-### Passo a passo
+Anotado porque vai acontecer de novo em qualquer monorepo npm no Railway.
 
-1. **New Project** e conecte o repositório `Vingreyck/CT-Saude-Total`.
-2. **+ New → Database → PostgreSQL.** O Railway cria a variável `DATABASE_URL` sozinho.
-3. Crie **três serviços** apontando para o mesmo repositório. Em cada um, em **Settings**:
+**1. O Railway detecta o monorepo sozinho e configura errado.** Ao importar o repositório, ele achou os 8 pacotes do workspace e criou um serviço por app já com o **Root Directory** apontando para a pasta do pacote. Com isso o build roda dentro de `apps/api`, onde não existe `package-lock.json` nem `packages/`, e o install quebra. **Root Directory tem que ficar vazio**, sempre. O que separa um serviço do outro são os comandos, não a pasta.
 
-| Serviço | Root Directory | Config file path (Config-as-code) |
-|---|---|---|
-| `api` | deixe vazio | `/apps/api/railway.json` |
-| `worker` | deixe vazio | `/apps/worker/railway.json` |
-| `web` | deixe vazio | `/apps/web/railway.json` |
+**2. O builder não é mais o Nixpacks, é o Railpack.** E o `railway.json` só é lido quando alguém preenche o caminho dele à mão nas configurações do serviço. Como isso não acontece sozinho, o arquivo era ignorado e o Railpack reclamava de `No start command detected`. Por isso os `railway.json` foram removidos: a configuração que vale está em [scripts/railway-setup.sh](../scripts/railway-setup.sh), via variáveis `RAILPACK_*`, que sempre valem e são reproduzíveis.
 
-> O caminho do arquivo de configuração é **absoluto a partir da raiz do repositório** e não segue o Root Directory. Por isso começa com barra.
+**3. O `prisma generate` precisa rodar no install, não no build.** O Railpack monta a imagem final copiando o `node_modules` da camada de **install**. O client do Prisma era gerado na camada de **build**, dentro de `node_modules`, e sumia. O container subia e morria com `@prisma/client did not initialize yet`. Por isso o install é `npm ci && npm run db:generate`.
 
-4. Em **Variables** de cada serviço, adicione `DATABASE_URL` com o valor `${{Postgres.DATABASE_URL}}` (referência ao serviço do banco, não o texto colado). Depois copie o resto do [.env.example](../.env.example).
-5. No serviço `web`, **Settings → Networking → Generate Domain**.
-
-### Duas coisas que evitam dor de cabeça
-
-**Só o serviço `api` roda migration.** Isso já está no `apps/api/railway.json` (`migrate:deploy` antes do `start`). Se os três rodarem, eles competem pela mesma migration e o deploy falha de forma intermitente, difícil de diagnosticar.
-
-**Cada serviço só rebuilda quando o que lhe interessa muda.** Os `watchPatterns` nos arquivos de config cuidam disso: mexer em `apps/web` não redeploya a `api`. Sem isso, todo commit dispara três builds.
-
-### Conferindo que subiu
+### Reproduzir do zero
 
 ```bash
-curl https://SEU-DOMINIO-DA-API/health
+railway login && railway link
 ```
 
-Deve responder `{"ok":true,...}`. Para a checagem que também testa o banco, use `/health/profundo`.
+```bash
+bash scripts/railway-setup.sh
+```
+
+Depois, em cada serviço, confira que **Root Directory está vazio** e gere os domínios:
+
+```bash
+railway domain --service "@ct/web" --port 3000
+```
+
+### Conferir que está de pé
+
+```bash
+curl https://ctapi-production.up.railway.app/health/profundo
+```
+
+Deve responder `{"ok":true,"banco":"conectado"}`.
+
+### O que a API avisa no log, e é esperado
+
+```
+subindo com pendencias:
+  EVO_TOKEN: sem ele nao da para puxar os alunos do EVO (CT-010)
+  WHATSAPP_ACCESS_TOKEN: sem ele nao da para mandar nem receber mensagem (CT-020)
+  ANTHROPIC_API_KEY: sem ela o bot nao conversa nem extrai informacao
+```
+
+A API sobe sem as três de propósito, para dar para ver o sistema de pé antes de ter token do EVO ou número verificado. Conforme cada uma chegar, é só adicionar:
+
+```bash
+railway variables --service "@ct/api" --set "EVO_TOKEN=cole-aqui"
+```
 
 ## 4. Antes do primeiro disparo real
 
