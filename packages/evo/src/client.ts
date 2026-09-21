@@ -13,7 +13,10 @@ import type { EvoMembro, EvoEntrada, EvoProspect } from './tipos.js'
 
 export interface OpcoesEvo {
   baseUrl?: string
-  token?: string
+  /** DNS da academia no EVO. E o usuario do Basic Auth. */
+  dns?: string
+  /** Chave aleatoria gerada junto com o token. E a senha do Basic Auth. */
+  chave?: string
   /** Tentativas por requisicao antes de desistir. */
   tentativas?: number
   timeoutMs?: number
@@ -32,19 +35,29 @@ export class EvoError extends Error {
 
 export class EvoClient {
   private baseUrl: string
-  private token: string
+  private autorizacao: string
   private tentativas: number
   private timeoutMs: number
 
   constructor(o: OpcoesEvo = {}) {
     this.baseUrl = o.baseUrl ?? process.env.EVO_BASE_URL ?? 'https://evo-integracao.w12app.com.br'
-    this.token = o.token ?? process.env.EVO_TOKEN ?? ''
     this.tentativas = o.tentativas ?? 4
     this.timeoutMs = o.timeoutMs ?? 30_000
 
-    if (!this.token) {
-      throw new Error('EVO_TOKEN vazio. Gere em Configuracoes > Integracoes > Tokens no painel do EVO.')
+    const dns = o.dns ?? process.env.EVO_DNS ?? ''
+    const chave = o.chave ?? process.env.EVO_TOKEN ?? ''
+
+    if (!dns || !chave) {
+      throw new Error(
+        'EVO_DNS ou EVO_TOKEN vazio. No painel do EVO: engrenagem > Integracao > botao +. ' +
+          'O DNS da academia e o usuario, a chave gerada e a senha.',
+      )
     }
+
+    // Basic Auth = base64 de "usuario:senha". O EVO usa o DNS como usuario e a
+    // chave como senha. Montar aqui evita o erro classico de colar a chave crua
+    // no header e tomar 401 sem entender por que.
+    this.autorizacao = 'Basic ' + Buffer.from(`${dns}:${chave}`).toString('base64')
   }
 
   private async get<T>(caminho: string, params: Record<string, string | number> = {}): Promise<T> {
@@ -56,7 +69,7 @@ export class EvoClient {
     for (let tentativa = 1; tentativa <= this.tentativas; tentativa++) {
       try {
         const r = await fetch(url, {
-          headers: { Authorization: `Basic ${this.token}`, Accept: 'application/json' },
+          headers: { Authorization: this.autorizacao, Accept: 'application/json' },
           signal: AbortSignal.timeout(this.timeoutMs),
         })
 
@@ -139,7 +152,7 @@ export class EvoClient {
         ok: false,
         detalhe:
           erro.status === 401
-            ? 'token invalido ou sem permissao'
+            ? 'DNS ou chave errados, ou o token nao tem a tag de permissao necessaria'
             : erro.status === 403
               ? 'plano da academia pode nao liberar API. Ver docs/01-arquitetura.md secao 7.1'
               : erro.message,

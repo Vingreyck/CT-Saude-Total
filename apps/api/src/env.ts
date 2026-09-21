@@ -13,6 +13,7 @@ const Schema = z.object({
   DATABASE_URL: z.string().min(1, 'sem banco nao sobe. No Railway isso vem preenchido'),
 
   EVO_BASE_URL: z.string().min(1).default('https://evo-integracao.w12app.com.br'),
+  EVO_DNS: z.string().optional(),
   EVO_TOKEN: z.string().optional(),
   EVO_WEBHOOK_SECRET: z.string().optional(),
 
@@ -45,6 +46,7 @@ export const env = resultado.data
  * log diz o que ainda nao funciona, em vez de derrubar o servico.
  */
 const pendencias: Array<[string, string]> = [
+  ['EVO_DNS', 'e o usuario do Basic Auth do EVO (CT-010)'],
   ['EVO_TOKEN', 'sem ele nao da para puxar os alunos do EVO (CT-010)'],
   ['WHATSAPP_ACCESS_TOKEN', 'sem ele nao da para mandar nem receber mensagem (CT-020)'],
   ['ANTHROPIC_API_KEY', 'sem ela o bot nao conversa nem extrai informacao'],
