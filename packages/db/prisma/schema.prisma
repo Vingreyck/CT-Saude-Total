@@ -1,0 +1,502 @@
+// ---------------------------------------------------------------------------
+// CT Saude Total - modelo de dados
+//
+// Regra de ouro: dado que vem do EVO fica em tabela espelho (com idEvo e
+// payload bruto). Dado que e NOSSO (consentimento, conversa, insight, tag)
+// fica em tabela propria e NUNCA e sobrescrito pelo sync.
+//
+// O que esta ativo aqui cobre as Sprints 1 a 5. Os modelos das sprints 6+
+// (reserva, chamado, turno, pontuacao) estao no fim do arquivo, comentados,
+// para nao criar tabela vazia antes da hora.
+// ---------------------------------------------------------------------------
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================== ENUMS ======================================
+
+enum StatusMembro {
+  ATIVO
+  INATIVO
+  PROSPECT
+  CANCELADO
+}
+
+enum CanalContato {
+  WHATSAPP
+  EMAIL
+  SMS
+}
+
+enum StatusConsentimento {
+  OPT_IN
+  OPT_OUT
+}
+
+enum DirecaoMensagem {
+  ENTRADA
+  SAIDA
+}
+
+enum TipoMensagem {
+  TEXTO
+  AUDIO
+  IMAGEM
+  DOCUMENTO
+  TEMPLATE
+  INTERATIVO
+}
+
+enum StatusEntrega {
+  PENDENTE
+  ENVIADO
+  ENTREGUE
+  LIDO
+  FALHOU
+}
+
+enum TipoCampanha {
+  FEEDBACK
+  ANIVERSARIO
+  NOVIDADE
+  AVISO
+  AUSENCIA
+  RETORNO
+  COBRANCA
+}
+
+enum StatusCampanha {
+  RASCUNHO
+  AGENDADA
+  TESTE
+  DISPARANDO
+  PAUSADA
+  CONCLUIDA
+  CANCELADA
+}
+
+enum StatusAlvo {
+  PENDENTE
+  ENVIADO
+  ENTREGUE
+  RESPONDIDO
+  FALHOU
+  PULADO
+}
+
+enum TipoPergunta {
+  NOTA
+  ESCALA_NPS
+  OPCAO
+  TEXTO
+}
+
+enum StatusResposta {
+  INICIADA
+  PARCIAL
+  CONCLUIDA
+  ABANDONADA
+}
+
+enum Sentimento {
+  POSITIVO
+  NEUTRO
+  NEGATIVO
+}
+
+enum Urgencia {
+  BAIXA
+  MEDIA
+  ALTA
+}
+
+enum OrigemInsight {
+  MENSAGEM
+  RESPOSTA_ITEM
+}
+
+enum FuncaoInterna {
+  ADM
+  GERENTE
+  PROFESSOR
+  ATENDENTE
+}
+
+enum IntencaoMensagem {
+  FEEDBACK
+  DUVIDA
+  RECLAMACAO
+  AGENDAMENTO
+  COMERCIAL
+  OPT_OUT
+  OUTRO
+}
+
+// ============================== ESTRUTURA ==================================
+
+model Unidade {
+  id       String   @id @default(cuid())
+  idEvo    Int?     @unique
+  nome     String
+  timezone String   @default("America/Sao_Paulo")
+  criadoEm DateTime @default(now())
+
+  membros   Membro[]
+  usuarios  UsuarioInterno[]
+  campanhas Campanha[]
+
+  @@map("unidade")
+}
+
+model UsuarioInterno {
+  id        String        @id @default(cuid())
+  idEvo     Int?          @unique
+  unidadeId String
+  nome      String
+  email     String        @unique
+  senhaHash String?
+  funcao    FuncaoInterna
+  ativo     Boolean       @default(true)
+  criadoEm  DateTime      @default(now())
+
+  unidade Unidade @relation(fields: [unidadeId], references: [id])
+
+  @@index([unidadeId, funcao])
+  @@map("usuario_interno")
+}
+
+// ============================== MEMBRO =====================================
+
+model Membro {
+  id        String @id @default(cuid())
+  unidadeId String
+
+  // --- espelho do EVO, o EVO sempre ganha em caso de divergencia ---
+  idEvo          Int          @unique
+  nome           String
+  telefoneE164   String?
+  telefoneValido Boolean      @default(false)
+  email          String?
+  nascimento     DateTime?
+  status         StatusMembro @default(ATIVO)
+  plano          String?
+  inicioContrato DateTime?
+  fimContrato    DateTime?
+  sincronizadoEm DateTime?
+  payloadEvo     Json?
+
+  // --- nosso, o sync nunca encosta aqui ---
+  tags               String[] @default([])
+  objetivo           String?
+  horarioPreferido   String?
+  modalidadeFavorita String?
+  comoConheceu       String?
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  unidade        Unidade            @relation(fields: [unidadeId], references: [id])
+  consentimentos Consentimento[]
+  conversas      Conversa[]
+  alvos          CampanhaAlvo[]
+  respostas      RespostaPesquisa[]
+  checkins       Checkin[]
+  alertas        AlertaAusencia[]
+
+  @@index([status])
+  @@index([telefoneE164])
+  @@index([unidadeId, status])
+  @@map("membro")
+}
+
+/// Consentimento e opt-out. Opt-out aqui bloqueia o disparo no nivel do banco,
+/// nao so no fluxo. E o registro exigido pela LGPD.
+model Consentimento {
+  id          String              @id @default(cuid())
+  membroId    String
+  canal       CanalContato        @default(WHATSAPP)
+  status      StatusConsentimento
+  finalidade  String
+  textoAceito String?
+  origem      String
+  criadoEm    DateTime            @default(now())
+
+  membro Membro @relation(fields: [membroId], references: [id], onDelete: Cascade)
+
+  @@unique([membroId, canal, finalidade])
+  @@index([status])
+  @@map("consentimento")
+}
+
+// ============================== CONVERSA ===================================
+
+model Conversa {
+  id       String       @id @default(cuid())
+  membroId String
+  canal    CanalContato @default(WHATSAPP)
+
+  /// Fim da janela de 24h de mensagem de servico (gratuita). Depois disso,
+  /// so um template pago reabre a conversa.
+  janelaServicoExpiraEm DateTime?
+
+  /// Quando um humano assume, o bot para de responder ate a devolucao (CT-046).
+  assumidaPorId String?
+  assumidaEm    DateTime?
+
+  ultimaMensagemEm DateTime?
+  criadoEm         DateTime  @default(now())
+
+  membro    Membro     @relation(fields: [membroId], references: [id], onDelete: Cascade)
+  mensagens Mensagem[]
+
+  @@index([membroId])
+  @@index([janelaServicoExpiraEm])
+  @@map("conversa")
+}
+
+model Mensagem {
+  id         String          @id @default(cuid())
+  conversaId String
+  direcao    DirecaoMensagem
+  tipo       TipoMensagem    @default(TEXTO)
+  texto      String?
+
+  /// Preenchido quando tipo = AUDIO (CT-025). O audio original fica em midiaUrl.
+  transcricao String?
+
+  midiaUrl          String?
+  templateNome      String?
+  providerMessageId String?           @unique
+  statusEntrega     StatusEntrega     @default(PENDENTE)
+  intencao          IntencaoMensagem?
+  erro              String?
+  criadoEm          DateTime          @default(now())
+
+  conversa Conversa        @relation(fields: [conversaId], references: [id], onDelete: Cascade)
+  eventos  EventoEntrega[]
+  insights Insight[]
+
+  @@index([conversaId, criadoEm])
+  @@map("mensagem")
+}
+
+model EventoEntrega {
+  id         String        @id @default(cuid())
+  mensagemId String
+  evento     StatusEntrega
+  payload    Json?
+  criadoEm   DateTime      @default(now())
+
+  mensagem Mensagem @relation(fields: [mensagemId], references: [id], onDelete: Cascade)
+
+  @@index([mensagemId])
+  @@map("evento_entrega")
+}
+
+// ============================== CAMPANHA ===================================
+
+model Campanha {
+  id            String         @id @default(cuid())
+  unidadeId     String
+  nome          String
+  tipo          TipoCampanha
+  status        StatusCampanha @default(RASCUNHO)
+  templateNome  String
+  templateVars  Json?
+  segmento      Json
+  pesquisaId    String?
+  agendadaPara  DateTime?
+  iniciadaEm    DateTime?
+  concluidaEm   DateTime?
+  custoEstimado Decimal?       @db.Decimal(10, 2)
+  criadoEm      DateTime       @default(now())
+
+  unidade  Unidade        @relation(fields: [unidadeId], references: [id])
+  pesquisa Pesquisa?      @relation(fields: [pesquisaId], references: [id])
+  alvos    CampanhaAlvo[]
+
+  @@index([status, agendadaPara])
+  @@map("campanha")
+}
+
+/// Uma linha por pessoa por campanha. A chave idempotente e o que garante que
+/// reprocessar a fila nunca manda a mesma mensagem duas vezes (CT-031). Esse e
+/// o erro mais caro possivel neste produto.
+model CampanhaAlvo {
+  id                String     @id @default(cuid())
+  campanhaId        String
+  membroId          String
+  chaveIdempotencia String     @unique
+  status            StatusAlvo @default(PENDENTE)
+  tentativas        Int        @default(0)
+  enviadoEm         DateTime?
+  erro              String?
+  criadoEm          DateTime   @default(now())
+
+  campanha Campanha @relation(fields: [campanhaId], references: [id], onDelete: Cascade)
+  membro   Membro   @relation(fields: [membroId], references: [id], onDelete: Cascade)
+
+  @@unique([campanhaId, membroId])
+  @@index([campanhaId, status])
+  @@map("campanha_alvo")
+}
+
+// ============================== PESQUISA ===================================
+
+model Pesquisa {
+  id       String   @id @default(cuid())
+  nome     String
+  versao   Int      @default(1)
+  ativa    Boolean  @default(false)
+  criadoEm DateTime @default(now())
+
+  perguntas Pergunta[]
+  respostas RespostaPesquisa[]
+  campanhas Campanha[]
+
+  @@unique([nome, versao])
+  @@map("pesquisa")
+}
+
+model Pergunta {
+  id          String       @id @default(cuid())
+  pesquisaId  String
+  ordem       Int
+  tipo        TipoPergunta
+  enunciado   String
+  obrigatoria Boolean      @default(true)
+
+  /// Entra no rodizio: so 2 dos 8 itens de nota vao para cada aluno, e a base
+  /// inteira cobre todos os itens. Conversa 4x mais curta, media igualmente boa.
+  rotativa Boolean @default(false)
+
+  opcoes    String[] @default([])
+  minimo    Int?
+  maximo    Int?
+  categoria String?
+
+  pesquisa Pesquisa       @relation(fields: [pesquisaId], references: [id], onDelete: Cascade)
+  itens    RespostaItem[]
+
+  @@unique([pesquisaId, ordem])
+  @@map("pergunta")
+}
+
+model RespostaPesquisa {
+  id         String @id @default(cuid())
+  pesquisaId String
+
+  /// Nulo quando a resposta for anonima. Decisao de produto ainda pendente do
+  /// dono: identificada permite ligar para o detrator, anonima nao.
+  membroId String?
+
+  status      StatusResposta @default(INICIADA)
+  nps         Int?
+  iniciadaEm  DateTime       @default(now())
+  concluidaEm DateTime?
+  lembreteEm  DateTime?
+
+  pesquisa Pesquisa       @relation(fields: [pesquisaId], references: [id])
+  membro   Membro?        @relation(fields: [membroId], references: [id], onDelete: SetNull)
+  itens    RespostaItem[]
+
+  @@index([pesquisaId, status])
+  @@index([membroId])
+  @@map("resposta_pesquisa")
+}
+
+model RespostaItem {
+  id                 String   @id @default(cuid())
+  respostaPesquisaId String
+  perguntaId         String
+  valorNum           Int?
+  valorTexto         String?
+  valorOpcao         String?
+  criadoEm           DateTime @default(now())
+
+  resposta RespostaPesquisa @relation(fields: [respostaPesquisaId], references: [id], onDelete: Cascade)
+  pergunta Pergunta         @relation(fields: [perguntaId], references: [id])
+  insights Insight[]
+
+  @@unique([respostaPesquisaId, perguntaId])
+  @@map("resposta_item")
+}
+
+/// O diamante do projeto. Texto livre vira linha filtravel aqui.
+///
+/// categoria e subcategoria saem de taxonomia FECHADA e versionada, nunca do
+/// que o modelo inventar na hora. Sem isso, em tres meses existem "limpeza",
+/// "Limpeza", "higiene" e "sujeira" como quatro categorias diferentes, e o
+/// ranking do painel vira lixo.
+model Insight {
+  id             String        @id @default(cuid())
+  origem         OrigemInsight
+  mensagemId     String?
+  respostaItemId String?
+
+  categoria       String
+  subcategoria    String?
+  sentimento      Sentimento
+  urgencia        Urgencia @default(BAIXA)
+  entidades       Json?
+  tags            String[] @default([])
+  taxonomiaVersao Int      @default(1)
+  modeloUsado     String?
+
+  criadoEm DateTime @default(now())
+
+  mensagem     Mensagem?     @relation(fields: [mensagemId], references: [id], onDelete: Cascade)
+  respostaItem RespostaItem? @relation(fields: [respostaItemId], references: [id], onDelete: Cascade)
+
+  @@index([categoria, criadoEm])
+  @@index([sentimento])
+  @@index([urgencia])
+  @@map("insight")
+}
+
+// ============================== RETENCAO ===================================
+
+model Checkin {
+  id       String   @id @default(cuid())
+  membroId String
+  dataHora DateTime
+  origem   String   @default("catraca_evo")
+  idEvo    String?  @unique
+
+  membro Membro @relation(fields: [membroId], references: [id], onDelete: Cascade)
+
+  @@index([membroId, dataHora])
+  @@index([dataHora])
+  @@map("checkin")
+}
+
+model AlertaAusencia {
+  id          String    @id @default(cuid())
+  membroId    String
+  diasSemIr   Int
+  disparadoEm DateTime  @default(now())
+  motivo      String?
+  retornouEm  DateTime?
+
+  membro Membro @relation(fields: [membroId], references: [id], onDelete: Cascade)
+
+  @@index([membroId, disparadoEm])
+  @@map("alerta_ausencia")
+}
+
+// ---------------------------------------------------------------------------
+// SPRINTS 6+ : descomentar quando a sprint chegar, nao antes. Tabela vazia em
+// producao e so ruido que confunde quem abre o banco.
+//
+// model Reserva         { ... }  // CT-080, sala Recovery e quadra de areia
+// model Chamado         { ... }  // CT-110, alarme operacional
+// model Turno           { ... }  // CT-115, escala dos professores
+// model Pontuacao       { ... }  // CT-120, gamificacao da equipe
+// model MensagemInterna { ... }  // CT-114, chat interno por funcao
+// ---------------------------------------------------------------------------

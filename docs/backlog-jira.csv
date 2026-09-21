@@ -1,0 +1,280 @@
+﻿Issue Key,Summary,Description,Issue Type,Priority,Story Points,Sprint,Epic Name,Labels,Status
+CT-001,"Como dev, quero o monorepo criado com apps e packages para começar a codar sem discutir estrutura","Historia: Como dev, quero o monorepo criado com apps e packages para começar a codar sem discutir estrutura
+
+Criterios de aceite: npm workspaces; apps `api`, `worker`, `web`; packages `db`, `shared`, `evo`, `whatsapp`, `ai`; lint e format configurados; build passa",Story,Highest,3,Sprint 0,E0 Plataforma e Fundação,E0 must,To Do
+CT-002,"Como dev, quero Postgres provisionado no Railway com migrations versionadas","Historia: Como dev, quero Postgres provisionado no Railway com migrations versionadas
+
+Criterios de aceite: serviço Postgres no Railway; Prisma conectado; `migrate dev` e `migrate deploy` funcionando; `.env.example` completo",Story,Highest,3,Sprint 0,E0 Plataforma e Fundação,E0 must,To Do
+CT-003,"Como dev, quero deploy automático dos 4 serviços no Railway a partir da `main`","Historia: Como dev, quero deploy automático dos 4 serviços no Railway a partir da `main`
+
+Criterios de aceite: push na `main` sobe `api`, `worker` e `web`; healthcheck em `/health`; variáveis separadas por ambiente",Story,Highest,5,Sprint 0,E0 Plataforma e Fundação,E0 must,To Do
+CT-004,"Como dev, quero fila e cron rodando no worker","Historia: Como dev, quero fila e cron rodando no worker
+
+Criterios de aceite: pg-boss instalado; um job de teste enfileirado e processado; um cron de teste executando; retry com backoff exponencial configurado",Story,Highest,5,Sprint 0,E0 Plataforma e Fundação,E0 must,To Do
+CT-005,"Como dev, quero logs estruturados e captura de erro","Historia: Como dev, quero logs estruturados e captura de erro
+
+Criterios de aceite: pino com correlationId por requisição e por job; Sentry recebendo exceções de api e worker",Story,High,2,Sprint 0,E0 Plataforma e Fundação,E0,To Do
+CT-006,"Como ADM, quero login com papéis para que cada função veja só o que lhe cabe","Historia: Como ADM, quero login com papéis para que cada função veja só o que lhe cabe
+
+Criterios de aceite: papéis `adm`, `gerente`, `professor`, `atendente`; guard de rota na API e no painel; ADM enxerga tudo",Story,Highest,5,Sprint 1,E0 Plataforma e Fundação,E0 must,To Do
+CT-007,"Como responsável pelo dado, quero a política de privacidade e as bases legais escritas antes do primeiro disparo","Historia: Como responsável pelo dado, quero a política de privacidade e as bases legais escritas antes do primeiro disparo
+
+Criterios de aceite: documento com finalidade, base legal e prazo de retenção por tipo de dado; texto de consentimento aprovado pelo dono",Story,Highest,3,Sprint 0,E0 Plataforma e Fundação,E0 must,To Do
+CT-010,"Como dev, quero validar acesso, escopo e rate limit da API do EVO antes de planejar o resto","Historia: Como dev, quero validar acesso, escopo e rate limit da API do EVO antes de planejar o resto
+
+Criterios de aceite: token emitido; chamada real a `/api/v1/members` retornando dados; rate limit documentado; confirmado se catraca vem por consulta ou só por webhook",Story,Highest,2,Sprint 0,E1 Integração com o EVO,E1 must,To Do
+CT-011,"Como sistema, quero um client tipado do EVO com retry e tratamento de rate limit","Historia: Como sistema, quero um client tipado do EVO com retry e tratamento de rate limit
+
+Criterios de aceite: package `evo` com métodos tipados; backoff em 429; timeouts; logs de consumo por endpoint",Story,Highest,5,Sprint 1,E1 Integração com o EVO,E1 must,To Do
+CT-012,"Como sistema, quero sincronizar a base de membros do EVO todo dia","Historia: Como sistema, quero sincronizar a base de membros do EVO todo dia
+
+Criterios de aceite: cron diário + gatilho manual; upsert por `id_evo`; guarda `sincronizado_em` e payload bruto; relatório de quantos criados, atualizados e com erro",Story,Highest,5,Sprint 1,E1 Integração com o EVO,E1 must,To Do
+CT-013,"Como sistema, quero normalizar telefones para E.164 e marcar os inválidos","Historia: Como sistema, quero normalizar telefones para E.164 e marcar os inválidos
+
+Criterios de aceite: todo telefone salvo em E.164 (+55...); número inválido ou ausente marcado e excluído dos disparos; relatório de cobertura de contato",Story,Highest,3,Sprint 1,E1 Integração com o EVO,E1 must,To Do
+CT-014,"Como sistema, quero identificar quem está ativo, inativo e prospect","Historia: Como sistema, quero identificar quem está ativo, inativo e prospect
+
+Criterios de aceite: status derivado do EVO em campo próprio; segmentos consultáveis; regra documentada",Story,Highest,3,Sprint 1,E1 Integração com o EVO,E1 must,To Do
+CT-015,"Como sistema, quero receber webhooks do EVO para refletir mudanças em tempo real","Historia: Como sistema, quero receber webhooks do EVO para refletir mudanças em tempo real
+
+Criterios de aceite: endpoint `/webhooks/evo` com validação de assinatura; eventos de cadastro e contrato aplicados; payload bruto arquivado",Story,High,5,Sprint 5,E1 Integração com o EVO,E1,To Do
+CT-016,"Como sistema, quero importar o histórico de catraca","Historia: Como sistema, quero importar o histórico de catraca
+
+Criterios de aceite: check-ins gravados com data, hora e membro; carga inicial dos últimos 90 dias; atualização diária",Story,Highest,5,Sprint 4,E1 Integração com o EVO,E1 must,To Do
+CT-020,"Como dono, quero um número oficial do CT Saúde Total no WhatsApp Business","Historia: Como dono, quero um número oficial do CT Saúde Total no WhatsApp Business
+
+Criterios de aceite: Business Manager verificado; número dedicado; perfil com nome, foto, endereço e horário preenchidos",Story,Highest,3,Sprint 0,E2 Canal de WhatsApp,E2 must,To Do
+CT-021,"Como dev, quero a interface `CanalWhatsapp` com implementação oficial e implementação de testes","Historia: Como dev, quero a interface `CanalWhatsapp` com implementação oficial e implementação de testes
+
+Criterios de aceite: interface única; driver Cloud API; driver Evolution API para dev; troca por variável de ambiente",Story,Highest,5,Sprint 1,E2 Canal de WhatsApp,E2 must,To Do
+CT-022,"Como sistema, quero receber mensagens, status e mídia por webhook","Historia: Como sistema, quero receber mensagens, status e mídia por webhook
+
+Criterios de aceite: `/webhooks/whatsapp` validando assinatura; texto, áudio e imagem normalizados; eventos de entregue, lido e falha gravados",Story,Highest,5,Sprint 1,E2 Canal de WhatsApp,E2 must,To Do
+CT-023,"Como sistema, quero controlar a janela de serviço de 24h por conversa","Historia: Como sistema, quero controlar a janela de serviço de 24h por conversa
+
+Criterios de aceite: `janela_servico_expira_em` atualizado a cada mensagem do cliente; envio livre dentro da janela; fora dela, só template",Story,Highest,3,Sprint 1,E2 Canal de WhatsApp,E2 must,To Do
+CT-024,"Como dono, quero templates aprovados para abertura de conversa","Historia: Como dono, quero templates aprovados para abertura de conversa
+
+Criterios de aceite: pelo menos 4 templates aprovados: feedback, aniversário, aviso geral, ausência; cada um classificado como marketing ou utility com o custo anotado",Story,Highest,3,Sprint 1,E2 Canal de WhatsApp,E2 must,To Do
+CT-025,"Como sistema, quero transcrever áudios recebidos","Historia: Como sistema, quero transcrever áudios recebidos
+
+Criterios de aceite: áudio vira texto e segue o mesmo fluxo de extração; original guardado; falha de transcrição não derruba a conversa",Story,High,3,Sprint 4,E2 Canal de WhatsApp,E2,To Do
+CT-030,"Como dono, quero criar uma campanha escolhendo público, template e horário","Historia: Como dono, quero criar uma campanha escolhendo público, template e horário
+
+Criterios de aceite: seleção por segmento (ativos, inativos, prospects, aniversariantes, ausentes); preview da mensagem com variáveis reais; agendamento com data e hora",Story,Highest,8,Sprint 3,E3 Motor de Campanhas e Disparo em Massa,E3 must,To Do
+CT-031,"Como sistema, quero disparar em lote com throttling e sem duplicar","Historia: Como sistema, quero disparar em lote com throttling e sem duplicar
+
+Criterios de aceite: fila com taxa configurável por minuto; chave idempotente `campanha_id + membro_id`; reprocessar a fila nunca reenvia",Story,Highest,8,Sprint 3,E3 Motor de Campanhas e Disparo em Massa,E3 must,To Do
+CT-032,"Como sistema, quero respeitar janela de horário e opt-out","Historia: Como sistema, quero respeitar janela de horário e opt-out
+
+Criterios de aceite: nenhum envio fora de 08:00 às 20:00; quem está em opt-out nunca entra no lote, com bloqueio em nível de banco",Story,Highest,3,Sprint 3,E3 Motor de Campanhas e Disparo em Massa,E3 must,To Do
+CT-033,"Como dono, quero ver o resultado de cada campanha","Historia: Como dono, quero ver o resultado de cada campanha
+
+Criterios de aceite: painel com enviados, entregues, lidos, respondidos, falhas e opt-outs; custo estimado da campanha",Story,Highest,5,Sprint 3,E3 Motor de Campanhas e Disparo em Massa,E3 must,To Do
+CT-034,"Como aluno, quero conseguir sair da lista com uma palavra","Historia: Como aluno, quero conseguir sair da lista com uma palavra
+
+Criterios de aceite: ""parar"", ""sair"", ""cancelar"" e variações encerram tudo na hora; confirmação enviada; opt-out registrado com data e origem",Story,Highest,3,Sprint 3,E3 Motor de Campanhas e Disparo em Massa,E3 must,To Do
+CT-035,"Como sistema, quero disparar felicitação de aniversário automaticamente","Historia: Como sistema, quero disparar felicitação de aniversário automaticamente
+
+Criterios de aceite: cron diário; template de aniversário; sem duplicar no mesmo ano; respeita opt-out",Story,Highest,3,Sprint 4,E3 Motor de Campanhas e Disparo em Massa,E3 must,To Do
+CT-036,"Como dono, quero fazer teste com um grupo pequeno antes de mandar para todos","Historia: Como dono, quero fazer teste com um grupo pequeno antes de mandar para todos
+
+Criterios de aceite: modo ""disparo de teste"" com lista limitada; exige aprovação explícita para liberar o lote completo",Story,Highest,3,Sprint 3,E3 Motor de Campanhas e Disparo em Massa,E3 must,To Do
+CT-037,"Como sistema, quero pausar uma campanha em andamento","Historia: Como sistema, quero pausar uma campanha em andamento
+
+Criterios de aceite: botão de pausa que interrompe a fila em segundos; retomada continua de onde parou sem reenviar",Story,High,3,Sprint 4,E3 Motor de Campanhas e Disparo em Massa,E3,To Do
+CT-040,"Como dev, quero a interface `ProvedorIA` para trocar de LLM sem reescrever o bot","Historia: Como dev, quero a interface `ProvedorIA` para trocar de LLM sem reescrever o bot
+
+Criterios de aceite: interface única de chat e de extração estruturada; implementação do provedor escolhido; troca por variável de ambiente",Story,Highest,5,Sprint 2,E4 Chatbot Humanizado,E4 must,To Do
+CT-041,"Como aluno, quero conversar com alguém que parece gente do CT","Historia: Como aluno, quero conversar com alguém que parece gente do CT
+
+Criterios de aceite: prompt de persona aplicado; mensagens curtas, uma pergunta por vez, PT-BR coloquial; ver [05-persona-bot.md](05-persona-bot.md)",Story,Highest,5,Sprint 2,E4 Chatbot Humanizado,E4 must,To Do
+CT-042,"Como dono, quero que o bot nunca soe como robô de IA","Historia: Como dono, quero que o bot nunca soe como robô de IA
+
+Criterios de aceite: filtro determinístico de pós-processamento: remove travessão, limita emoji, quebra parágrafo longo, corta abertura corporativa; testes automatizados cobrindo cada regra",Story,Highest,3,Sprint 2,E4 Chatbot Humanizado,E4 must,To Do
+CT-043,"Como sistema, quero manter contexto da conversa entre mensagens","Historia: Como sistema, quero manter contexto da conversa entre mensagens
+
+Criterios de aceite: histórico da conversa carregado a cada turno com limite de tokens; retomada correta depois de horas de silêncio",Story,Highest,5,Sprint 2,E4 Chatbot Humanizado,E4 must,To Do
+CT-044,"Como sistema, quero simular ritmo humano de digitação","Historia: Como sistema, quero simular ritmo humano de digitação
+
+Criterios de aceite: indicador de digitando; atraso proporcional ao tamanho da mensagem, com teto; mensagem longa quebrada em duas",Story,High,2,Sprint 2,E4 Chatbot Humanizado,E4,To Do
+CT-045,"Como sistema, quero um guardrail de escopo e de honestidade","Historia: Como sistema, quero um guardrail de escopo e de honestidade
+
+Criterios de aceite: o bot não fala de preço, contrato nem assunto médico sem encaminhar para humano; se perguntarem direto se é robô, ele não mente; nunca inventa informação da academia",Story,Highest,3,Sprint 2,E4 Chatbot Humanizado,E4 must,To Do
+CT-046,"Como atendente, quero assumir a conversa quando necessário","Historia: Como atendente, quero assumir a conversa quando necessário
+
+Criterios de aceite: botão de ""assumir"" no painel; bot silencia enquanto humano está no controle; devolução explícita",Story,High,5,Sprint 4,E4 Chatbot Humanizado,E4,To Do
+CT-047,"Como sistema, quero classificar a intenção de toda mensagem recebida","Historia: Como sistema, quero classificar a intenção de toda mensagem recebida
+
+Criterios de aceite: toda mensagem entra com intenção classificada (feedback, dúvida, reclamação, agendamento, comercial, outro); usada para roteamento e para o painel",Story,Highest,5,Sprint 4,E4 Chatbot Humanizado,E4 must,To Do
+CT-050,"Como dono, quero a pesquisa de satisfação rodando dentro do WhatsApp","Historia: Como dono, quero a pesquisa de satisfação rodando dentro do WhatsApp
+
+Criterios de aceite: roteiro completo de [06-pesquisa-satisfacao.md](06-pesquisa-satisfacao.md); uma pergunta por mensagem; aceita resposta fora do formato e reinterpreta; permite pular pergunta",Story,Highest,8,Sprint 2,E5 Coleta de Dados e Pesquisa,E5 coleta-de-dados must,To Do
+CT-051,"Como sistema, quero gravar toda resposta em formato estruturado","Historia: Como sistema, quero gravar toda resposta em formato estruturado
+
+Criterios de aceite: nota vira inteiro, opção vira enum, texto vira texto mais extração; nada fica só como texto solto; schema validado antes de gravar",Story,Highest,5,Sprint 2,E5 Coleta de Dados e Pesquisa,E5 coleta-de-dados must,To Do
+CT-052,"Como dono, quero o NPS calculado automaticamente","Historia: Como dono, quero o NPS calculado automaticamente
+
+Criterios de aceite: promotores, neutros e detratores segundo a régua padrão; NPS do período e evolução mês a mês",Story,Highest,3,Sprint 2,E5 Coleta de Dados e Pesquisa,E5 coleta-de-dados must,To Do
+CT-053,"Como sistema, quero extrair categoria, sentimento e entidades de todo texto livre","Historia: Como sistema, quero extrair categoria, sentimento e entidades de todo texto livre
+
+Criterios de aceite: job de extração devolvendo JSON validado: categoria, sentimento, urgência, entidades (equipamento, professor, horário, local) e tags; taxonomia versionada",Story,Highest,8,Sprint 2,E5 Coleta de Dados e Pesquisa,E5 coleta-de-dados must,To Do
+CT-054,"Como dono, quero retomar quem começou e não terminou a pesquisa","Historia: Como dono, quero retomar quem começou e não terminou a pesquisa
+
+Criterios de aceite: lembrete único após 24h dentro da janela ou por template; retomada do ponto onde parou; no máximo um lembrete por pessoa",Story,High,3,Sprint 4,E5 Coleta de Dados e Pesquisa,E5 coleta-de-dados,To Do
+CT-055,"Como dono, quero um alerta imediato quando alguém der nota crítica","Historia: Como dono, quero um alerta imediato quando alguém der nota crítica
+
+Criterios de aceite: nota ≤ 2 em qualquer item ou NPS ≤ 6 gera alerta no painel e notificação; resposta marcada como prioridade de retorno",Story,Highest,5,Sprint 4,E5 Coleta de Dados e Pesquisa,E5 coleta-de-dados must,To Do
+CT-056,"Como dono, quero perguntar coisas novas sem precisar de deploy","Historia: Como dono, quero perguntar coisas novas sem precisar de deploy
+
+Criterios de aceite: pesquisas e perguntas cadastráveis no painel, com versionamento; respostas antigas continuam ligadas à versão da pesquisa que responderam",Story,High,8,Sprint 5,E5 Coleta de Dados e Pesquisa,E5 coleta-de-dados,To Do
+CT-057,"Como dono, quero o perfil de cada aluno enriquecido pelas conversas","Historia: Como dono, quero o perfil de cada aluno enriquecido pelas conversas
+
+Criterios de aceite: ficha do aluno mostra tags acumuladas, temas recorrentes, sentimento médio e histórico de notas",Story,Highest,5,Sprint 5,E5 Coleta de Dados e Pesquisa,E5 coleta-de-dados must,To Do
+CT-058,"Como sistema, quero capturar dado de perfil no meio da conversa, sem soar como formulário","Historia: Como sistema, quero capturar dado de perfil no meio da conversa, sem soar como formulário
+
+Criterios de aceite: objetivo, horário preferido, modalidade favorita e como conheceu a academia capturados de forma conversacional e gravados em campo próprio",Story,Highest,5,Sprint 5,E5 Coleta de Dados e Pesquisa,E5 coleta-de-dados must,To Do
+CT-059,"Como dono, quero exportar tudo que foi coletado","Historia: Como dono, quero exportar tudo que foi coletado
+
+Criterios de aceite: exportação CSV e XLSX por período, por segmento e por campanha",Story,High,3,Sprint 5,E5 Coleta de Dados e Pesquisa,E5 coleta-de-dados,To Do
+CT-060,"Como dono, quero abrir um painel e ver o essencial na primeira tela","Historia: Como dono, quero abrir um painel e ver o essencial na primeira tela
+
+Criterios de aceite: totais de alunos ativos, contatos válidos, respostas coletadas, NPS atual e alertas críticos abertos",Story,Highest,5,Sprint 3,E6 Painel Web do Dono,E6 must,To Do
+CT-061,"Como dono, quero listar e buscar clientes","Historia: Como dono, quero listar e buscar clientes
+
+Criterios de aceite: lista com busca por nome e telefone, filtro por status, plano e tags; paginada",Story,Highest,5,Sprint 1,E6 Painel Web do Dono,E6 must,To Do
+CT-062,"Como dono, quero abrir a ficha de um cliente e ver tudo dele","Historia: Como dono, quero abrir a ficha de um cliente e ver tudo dele
+
+Criterios de aceite: dados do EVO, consentimento, histórico de campanhas, respostas, tags e insights",Story,Highest,5,Sprint 3,E6 Painel Web do Dono,E6 must,To Do
+CT-063,"Como dono, quero ler as conversas do WhatsApp","Historia: Como dono, quero ler as conversas do WhatsApp
+
+Criterios de aceite: thread completa em ordem, com mídia e status de entrega; busca por texto dentro das conversas",Story,Highest,5,Sprint 1,E6 Painel Web do Dono,E6 must,To Do
+CT-064,"Como dono, quero ver as respostas da pesquisa consolidadas","Historia: Como dono, quero ver as respostas da pesquisa consolidadas
+
+Criterios de aceite: média por item avaliado, distribuição de notas, NPS e lista de respostas abertas com filtro por categoria e sentimento",Story,Highest,8,Sprint 3,E6 Painel Web do Dono,E6 must,To Do
+CT-065,"Como dono, quero ver o que mais aparece nas respostas abertas","Historia: Como dono, quero ver o que mais aparece nas respostas abertas
+
+Criterios de aceite: ranking de categorias e tags no período; clicar abre as respostas originais que sustentam o número",Story,Highest,5,Sprint 5,E6 Painel Web do Dono,E6 must,To Do
+CT-066,"Como dono, quero ver quem está prestes a sair","Historia: Como dono, quero ver quem está prestes a sair
+
+Criterios de aceite: lista de risco combinando ausência, NPS baixo e reclamação recente, ordenada por risco",Story,High,8,Sprint 5,E6 Painel Web do Dono,E6,To Do
+CT-070,"Como dono, quero que quem não aparece há 3 dias receba uma mensagem","Historia: Como dono, quero que quem não aparece há 3 dias receba uma mensagem
+
+Criterios de aceite: cron diário sobre os check-ins; limiar configurável; template classificado como utility; no máximo uma mensagem por período de ausência",Story,Highest,5,Sprint 4,E7 Retenção e Ausência,E7 must,To Do
+CT-071,"Como dono, quero saber o motivo de quem sumiu","Historia: Como dono, quero saber o motivo de quem sumiu
+
+Criterios de aceite: resposta ao lembrete vira conversa curta com motivo classificado (lesão, tempo, preço, desmotivação, mudança, outro)",Story,Highest,5,Sprint 4,E7 Retenção e Ausência,E7 must,To Do
+CT-072,"Como dono, quero escalonar a régua de reengajamento","Historia: Como dono, quero escalonar a régua de reengajamento
+
+Criterios de aceite: mensagens em 3, 7, 15 e 30 dias com tom e oferta diferentes; para na hora em que a pessoa volta a passar na catraca",Story,High,5,Sprint 5,E7 Retenção e Ausência,E7,To Do
+CT-073,"Como dono, quero medir se o lembrete funciona","Historia: Como dono, quero medir se o lembrete funciona
+
+Criterios de aceite: taxa de retorno em até 7 dias dos que receberam, comparada com grupo de controle",Story,High,5,Sprint 5,E7 Retenção e Ausência,E7,To Do
+CT-080,"Como aluno, quero reservar a sala Recovery pelo WhatsApp","Historia: Como aluno, quero reservar a sala Recovery pelo WhatsApp
+
+Criterios de aceite: bot mostra horários livres, confirma reserva, envia lembrete e permite cancelar; sem overbooking, com trava de concorrência",Story,Highest,8,Sprint 6,E8 Agendamento e Reservas,E8 must,To Do
+CT-081,"Como atendente, quero ver e gerenciar a agenda do Recovery no painel","Historia: Como atendente, quero ver e gerenciar a agenda do Recovery no painel
+
+Criterios de aceite: visão de dia e semana; criar, remarcar e cancelar; bloquear horário para manutenção",Story,Highest,5,Sprint 6,E8 Agendamento e Reservas,E8 must,To Do
+CT-082,"Como dono, quero configurar as regras da sala Recovery","Historia: Como dono, quero configurar as regras da sala Recovery
+
+Criterios de aceite: duração do slot, capacidade simultânea, antecedência mínima e máxima, limite por aluno por semana, horário de funcionamento",Story,Highest,5,Sprint 6,E8 Agendamento e Reservas,E8 must,To Do
+CT-083,"Como aluno, quero reservar a quadra de areia parceira","Historia: Como aluno, quero reservar a quadra de areia parceira
+
+Criterios de aceite: mesmo fluxo do Recovery, com calendário e regras próprias da quadra; modalidade informada na reserva",Story,High,5,Sprint 6,E8 Agendamento e Reservas,E8,To Do
+CT-084,"Como dono, quero que o no-show tenha consequência","Historia: Como dono, quero que o no-show tenha consequência
+
+Criterios de aceite: marcação de comparecimento; contagem de faltas; bloqueio temporário configurável após N faltas",Story,Medium,5,Sprint 6,E8 Agendamento e Reservas,E8,To Do
+CT-085,"Como sistema, quero refletir a reserva no EVO quando fizer sentido","Historia: Como sistema, quero refletir a reserva no EVO quando fizer sentido
+
+Criterios de aceite: avaliar `POST /api/v2/activities/booking`; se o EVO for a agenda oficial, ele vira a fonte da verdade e nós só orquestramos",Story,High,5,Sprint 6,E8 Agendamento e Reservas,E8,To Do
+CT-090,"Como dono, quero ver receita, inadimplência e previsão sem abrir o EVO","Historia: Como dono, quero ver receita, inadimplência e previsão sem abrir o EVO
+
+Criterios de aceite: sincronismo de contas a receber e faturas; painel com recebido, a receber, vencido e previsto do mês",Story,Highest,8,Sprint 7,E9 Financeiro Automatizado,E9 must,To Do
+CT-091,"Como sistema, quero cobrar automaticamente quem está em atraso","Historia: Como sistema, quero cobrar automaticamente quem está em atraso
+
+Criterios de aceite: régua de cobrança por WhatsApp em D+1, D+5 e D+15, com link de pagamento; para de cobrar assim que baixa",Story,Highest,8,Sprint 7,E9 Financeiro Automatizado,E9 must,To Do
+CT-092,"Como dono, quero acompanhar entradas, saídas e margem","Historia: Como dono, quero acompanhar entradas, saídas e margem
+
+Criterios de aceite: lançamento de despesas por categoria; DRE simplificado mensal",Story,High,8,Sprint 7,E9 Financeiro Automatizado,E9,To Do
+CT-093,"Como dono, quero ver churn e receita recorrente","Historia: Como dono, quero ver churn e receita recorrente
+
+Criterios de aceite: MRR, churn mensal, ticket médio e tempo médio de permanência",Story,High,5,Sprint 7,E9 Financeiro Automatizado,E9,To Do
+CT-094,"Como dono, quero conciliar o que entrou de verdade","Historia: Como dono, quero conciliar o que entrou de verdade
+
+Criterios de aceite: conciliação entre baixa no EVO e extrato; divergências listadas",Story,Medium,8,Sprint 7,E9 Financeiro Automatizado,E9,To Do
+CT-100,"Como dono, quero um dashboard executivo com o que importa","Historia: Como dono, quero um dashboard executivo com o que importa
+
+Criterios de aceite: alunos ativos, entradas e saídas do mês, frequência média, NPS, receita e alertas críticos, tudo em uma tela",Story,Highest,8,Sprint 8,E10 BI e Dashboards,E10 must,To Do
+CT-101,"Como dono, quero ver como a satisfação evolui","Historia: Como dono, quero ver como a satisfação evolui
+
+Criterios de aceite: série histórica de NPS e das notas por item avaliado, com comparação entre períodos",Story,Highest,5,Sprint 8,E10 BI e Dashboards,E10 must,To Do
+CT-102,"Como dono, quero entender os horários de pico","Historia: Como dono, quero entender os horários de pico
+
+Criterios de aceite: mapa de calor de frequência por dia e faixa horária a partir da catraca",Story,High,5,Sprint 8,E10 BI e Dashboards,E10,To Do
+CT-103,"Como dono, quero receber um resumo semanal automático","Historia: Como dono, quero receber um resumo semanal automático
+
+Criterios de aceite: mensagem ou e-mail toda segunda com números da semana e os 3 pontos que mais apareceram nas respostas abertas",Story,High,5,Sprint 8,E10 BI e Dashboards,E10,To Do
+CT-104,"Como dono, quero perguntar em linguagem natural sobre a base","Historia: Como dono, quero perguntar em linguagem natural sobre a base
+
+Criterios de aceite: pergunta em texto vira consulta e resposta com número e fonte; somente leitura, restrito ao ADM",Story,Medium,13,Sprint 9,E10 BI e Dashboards,E10,To Do
+CT-110,"Como atendente, quero abrir um chamado quando algo quebra ou suja","Historia: Como atendente, quero abrir um chamado quando algo quebra ou suja
+
+Criterios de aceite: tipo, local, descrição, foto e prioridade; chamado criado em segundos",Story,Highest,5,Sprint 8,E11 Operação Interna,E11 must,To Do
+CT-111,"Como equipe, quero ser avisado na hora que um chamado é aberto","Historia: Como equipe, quero ser avisado na hora que um chamado é aberto
+
+Criterios de aceite: notificação para os papéis responsáveis pelo tipo do chamado, com o ADM sempre incluído",Story,Highest,5,Sprint 8,E11 Operação Interna,E11 must,To Do
+CT-112,"Como gerente, quero acompanhar o ciclo do chamado","Historia: Como gerente, quero acompanhar o ciclo do chamado
+
+Criterios de aceite: estados aberto, em andamento e resolvido; responsável; tempo de resolução medido",Story,Highest,5,Sprint 8,E11 Operação Interna,E11 must,To Do
+CT-113,"Como equipe, quero um alarme para urgência real","Historia: Como equipe, quero um alarme para urgência real
+
+Criterios de aceite: prioridade urgente dispara notificação imediata e fica destacada até alguém assumir",Story,Highest,3,Sprint 8,E11 Operação Interna,E11 must,To Do
+CT-114,"Como funcionário, quero um chat interno separado por função","Historia: Como funcionário, quero um chat interno separado por função
+
+Criterios de aceite: canais por função e canal geral; ADM lê todos os canais; histórico pesquisável",Story,High,8,Sprint 9,E11 Operação Interna,E11,To Do
+CT-115,"Como gerente, quero montar a escala de turnos dos professores","Historia: Como gerente, quero montar a escala de turnos dos professores
+
+Criterios de aceite: grade semanal por professor; turnos alternados; conflito detectado na hora",Story,Highest,8,Sprint 9,E11 Operação Interna,E11 must,To Do
+CT-116,"Como professor, quero registrar entrada e saída","Historia: Como professor, quero registrar entrada e saída
+
+Criterios de aceite: ponto por turno; espelho mensal; ADM vê horas trabalhadas e faltas",Story,High,5,Sprint 9,E11 Operação Interna,E11,To Do
+CT-117,"Como professor, quero pedir troca de turno com outro colega","Historia: Como professor, quero pedir troca de turno com outro colega
+
+Criterios de aceite: pedido, aceite do colega e aprovação do gerente; escala atualizada automaticamente",Story,Medium,5,Sprint 9,E11 Operação Interna,E11,To Do
+CT-120,"Como dono, quero pontuar indicações e contratos fechados","Historia: Como dono, quero pontuar indicações e contratos fechados
+
+Criterios de aceite: regras configuráveis de pontos por evento; pontuação creditada ao atendente ou professor responsável",Story,Highest,8,Sprint 10,E12 Gamificação e Bonificação,E12 must,To Do
+CT-121,"Como sistema, quero identificar a origem da indicação","Historia: Como sistema, quero identificar a origem da indicação
+
+Criterios de aceite: aluno indicado informa quem indicou, ou link e código próprio de cada funcionário; crédito automático",Story,Highest,5,Sprint 10,E12 Gamificação e Bonificação,E12 must,To Do
+CT-122,"Como equipe, quero ver o ranking do mês","Historia: Como equipe, quero ver o ranking do mês
+
+Criterios de aceite: ranking por função com pontos e posição; histórico dos meses anteriores",Story,High,5,Sprint 10,E12 Gamificação e Bonificação,E12,To Do
+CT-123,"Como dono, quero calcular a bonificação do período","Historia: Como dono, quero calcular a bonificação do período
+
+Criterios de aceite: fechamento mensal com pontos, regra de bonificação e valor a pagar por pessoa",Story,High,5,Sprint 10,E12 Gamificação e Bonificação,E12,To Do
+CT-130,"Como aluno, quero entrar no app com meu cadastro do CT","Historia: Como aluno, quero entrar no app com meu cadastro do CT
+
+Criterios de aceite: autenticação ligada ao cadastro do EVO; recuperação de acesso",Story,Highest,8,Sprint 11,E13 App do Cliente,E13 must,To Do
+CT-131,"Como aluno, quero ver disponibilidade e reservar Recovery e quadra","Historia: Como aluno, quero ver disponibilidade e reservar Recovery e quadra
+
+Criterios de aceite: mesma regra de negócio das reservas do WhatsApp, sem duplicar lógica",Story,Highest,8,Sprint 11,E13 App do Cliente,E13 must,To Do
+CT-132,"Como aluno, quero receber avisos da academia","Historia: Como aluno, quero receber avisos da academia
+
+Criterios de aceite: push de avisos gerais e lembretes; respeitando preferência de notificação",Story,Highest,5,Sprint 11,E13 App do Cliente,E13 must,To Do
+CT-133,"Como aluno, quero ver minha frequência e evolução","Historia: Como aluno, quero ver minha frequência e evolução
+
+Criterios de aceite: check-ins do mês, sequência e comparação com o próprio histórico",Story,High,5,Sprint 11,E13 App do Cliente,E13,To Do
+CT-134,"Como aluno, quero responder pesquisas pelo app também","Historia: Como aluno, quero responder pesquisas pelo app também
+
+Criterios de aceite: mesma pesquisa do WhatsApp, mesma gravação estruturada",Story,High,5,Sprint 11,E13 App do Cliente,E13,To Do
+CT-135,"Como aluno, quero ver meu financeiro","Historia: Como aluno, quero ver meu financeiro
+
+Criterios de aceite: mensalidade, vencimento, situação e segunda via",Story,High,5,Sprint 11,E13 App do Cliente,E13,To Do
+CT-140,"Como PO, quero descobrir o modelo de negócio com o restaurante antes de especificar","Historia: Como PO, quero descobrir o modelo de negócio com o restaurante antes de especificar
+
+Criterios de aceite: reunião com o parceiro; definido quem cobra, quem entrega, se há comissão e se existe cardápio digital hoje",Story,Medium,3,Sprint 9,E14 Loja de Comida (restaurante parceiro),E14,To Do
+CT-141,"Como aluno, quero ver o cardápio e pedir pelo app","Historia: Como aluno, quero ver o cardápio e pedir pelo app
+
+Criterios de aceite: escopo a definir depois de CT-140",Story,Lowest,,,E14 Loja de Comida (restaurante parceiro),E14,To Do

@@ -1,0 +1,30 @@
+{
+  "name": "ct-saude-total",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "npm run build:packages && npm run build -w @ct/api -w @ct/worker -w @ct/web",
+    "typecheck": "npm run build:packages && npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "dev:api": "npm run dev -w @ct/api",
+    "dev:worker": "npm run dev -w @ct/worker",
+    "dev:web": "npm run dev -w @ct/web",
+    "db:generate": "npm run generate -w @ct/db",
+    "db:migrate": "npm run migrate -w @ct/db",
+    "db:studio": "npm run studio -w @ct/db",
+    "db:seed": "npm run seed -w @ct/db",
+    "build:packages": "npm run build -w @ct/db -w @ct/shared -w @ct/evo -w @ct/whatsapp -w @ct/ai"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2"
+  }
+}

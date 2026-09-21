@@ -1,0 +1,20 @@
+{
+  "name": "@ct/worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/main.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@ct/ai": "*",
+    "@ct/db": "*",
+    "@ct/evo": "*",
+    "@ct/shared": "*",
+    "@ct/whatsapp": "*",
+    "pg-boss": "^10.1.6"
+  }
+}

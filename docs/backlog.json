@@ -1,0 +1,932 @@
+[
+ {
+  "id": "CT-001",
+  "epico": "E0",
+  "epicoNome": "Plataforma e Fundação",
+  "historia": "Como dev, quero o monorepo criado com apps e packages para começar a codar sem discutir estrutura",
+  "criterios": "npm workspaces; apps `api`, `worker`, `web`; packages `db`, `shared`, `evo`, `whatsapp`, `ai`; lint e format configurados; build passa",
+  "prioridade": "M",
+  "pontos": 3,
+  "sprint": 0
+ },
+ {
+  "id": "CT-002",
+  "epico": "E0",
+  "epicoNome": "Plataforma e Fundação",
+  "historia": "Como dev, quero Postgres provisionado no Railway com migrations versionadas",
+  "criterios": "serviço Postgres no Railway; Prisma conectado; `migrate dev` e `migrate deploy` funcionando; `.env.example` completo",
+  "prioridade": "M",
+  "pontos": 3,
+  "sprint": 0
+ },
+ {
+  "id": "CT-003",
+  "epico": "E0",
+  "epicoNome": "Plataforma e Fundação",
+  "historia": "Como dev, quero deploy automático dos 4 serviços no Railway a partir da `main`",
+  "criterios": "push na `main` sobe `api`, `worker` e `web`; healthcheck em `/health`; variáveis separadas por ambiente",
+  "prioridade": "M",
+  "pontos": 5,
+  "sprint": 0
+ },
+ {
+  "id": "CT-004",
+  "epico": "E0",
+  "epicoNome": "Plataforma e Fundação",
+  "historia": "Como dev, quero fila e cron rodando no worker",
+  "criterios": "pg-boss instalado; um job de teste enfileirado e processado; um cron de teste executando; retry com backoff exponencial configurado",
+  "prioridade": "M",
+  "pontos": 5,
+  "sprint": 0
+ },
+ {
+  "id": "CT-005",
+  "epico": "E0",
+  "epicoNome": "Plataforma e Fundação",
+  "historia": "Como dev, quero logs estruturados e captura de erro",
+  "criterios": "pino com correlationId por requisição e por job; Sentry recebendo exceções de api e worker",
+  "prioridade": "S",
+  "pontos": 2,
+  "sprint": 0
+ },
+ {
+  "id": "CT-006",
+  "epico": "E0",
+  "epicoNome": "Plataforma e Fundação",
+  "historia": "Como ADM, quero login com papéis para que cada função veja só o que lhe cabe",
+  "criterios": "papéis `adm`, `gerente`, `professor`, `atendente`; guard de rota na API e no painel; ADM enxerga tudo",
+  "prioridade": "M",
+  "pontos": 5,
+  "sprint": 1
+ },
+ {
+  "id": "CT-007",
+  "epico": "E0",
+  "epicoNome": "Plataforma e Fundação",
+  "historia": "Como responsável pelo dado, quero a política de privacidade e as bases legais escritas antes do primeiro disparo",
+  "criterios": "documento com finalidade, base legal e prazo de retenção por tipo de dado; texto de consentimento aprovado pelo dono",
+  "prioridade": "M",
+  "pontos": 3,
+  "sprint": 0
+ },
+ {
+  "id": "CT-010",
+  "epico": "E1",
+  "epicoNome": "Integração com o EVO",
+  "historia": "Como dev, quero validar acesso, escopo e rate limit da API do EVO antes de planejar o resto",
+  "criterios": "token emitido; chamada real a `/api/v1/members` retornando dados; rate limit documentado; confirmado se catraca vem por consulta ou só por webhook",
+  "prioridade": "M",
+  "pontos": 2,
+  "sprint": 0
+ },
+ {
+  "id": "CT-011",
+  "epico": "E1",
+  "epicoNome": "Integração com o EVO",
+  "historia": "Como sistema, quero um client tipado do EVO com retry e tratamento de rate limit",
+  "criterios": "package `evo` com métodos tipados; backoff em 429; timeouts; logs de consumo por endpoint",
+  "prioridade": "M",
+  "pontos": 5,
+  "sprint": 1
+ },
+ {
+  "id": "CT-012",
+  "epico": "E1",
+  "epicoNome": "Integração com o EVO",
+  "historia": "Como sistema, quero sincronizar a base de membros do EVO todo dia",
+  "criterios": "cron diário + gatilho manual; upsert por `id_evo`; guarda `sincronizado_em` e payload bruto; relatório de quantos criados, atualizados e com erro",
+  "prioridade": "M",
+  "pontos": 5,
+  "sprint": 1
+ },
+ {
+  "id": "CT-013",
+  "epico": "E1",
+  "epicoNome": "Integração com o EVO",
+  "historia": "Como sistema, quero normalizar telefones para E.164 e marcar os inválidos",
+  "criterios": "todo telefone salvo em E.164 (+55...); número inválido ou ausente marcado e excluído dos disparos; relatório de cobertura de contato",
+  "prioridade": "M",
+  "pontos": 3,
+  "sprint": 1
+ },
+ {
+  "id": "CT-014",
+  "epico": "E1",
+  "epicoNome": "Integração com o EVO",
+  "historia": "Como sistema, quero identificar quem está ativo, inativo e prospect",
+  "criterios": "status derivado do EVO em campo próprio; segmentos consultáveis; regra documentada",
+  "prioridade": "M",
+  "pontos": 3,
+  "sprint": 1
+ },
+ {
+  "id": "CT-015",
+  "epico": "E1",
+  "epicoNome": "Integração com o EVO",
+  "historia": "Como sistema, quero receber webhooks do EVO para refletir mudanças em tempo real",
+  "criterios": "endpoint `/webhooks/evo` com validação de assinatura; eventos de cadastro e contrato aplicados; payload bruto arquivado",
+  "prioridade": "S",
+  "pontos": 5,
+  "sprint": 5
+ },
+ {
+  "id": "CT-016",
+  "epico": "E1",
+  "epicoNome": "Integração com o EVO",
+  "historia": "Como sistema, quero importar o histórico de catraca",
+  "criterios": "check-ins gravados com data, hora e membro; carga inicial dos últimos 90 dias; atualização diária",
+  "prioridade": "M",
+  "pontos": 5,
+  "sprint": 4
+ },
+ {
+  "id": "CT-020",
+  "epico": "E2",
+  "epicoNome": "Canal de WhatsApp",
+  "historia": "Como dono, quero um número oficial do CT Saúde Total no WhatsApp Business",
+  "criterios": "Business Manager verificado; número dedicado; perfil com nome, foto, endereço e horário preenchidos",
+  "prioridade": "M",
+  "pontos": 3,
+  "sprint": 0
+ },
+ {
+  "id": "CT-021",
+  "epico": "E2",
+  "epicoNome": "Canal de WhatsApp",
+  "historia": "Como dev, quero a interface `CanalWhatsapp` com implementação oficial e implementação de testes",
+  "criterios": "interface única; driver Cloud API; driver Evolution API para dev; troca por variável de ambiente",
+  "prioridade": "M",
+  "pontos": 5,
+  "sprint": 1
+ },
+ {
+  "id": "CT-022",
+  "epico": "E2",
+  "epicoNome": "Canal de WhatsApp",
+  "historia": "Como sistema, quero receber mensagens, status e mídia por webhook",
+  "criterios": "`/webhooks/whatsapp` validando assinatura; texto, áudio e imagem normalizados; eventos de entregue, lido e falha gravados",
+  "prioridade": "M",
+  "pontos": 5,
+  "sprint": 1
+ },
+ {
+  "id": "CT-023",
+  "epico": "E2",
+  "epicoNome": "Canal de WhatsApp",
+  "historia": "Como sistema, quero controlar a janela de serviço de 24h por conversa",
+  "criterios": "`janela_servico_expira_em` atualizado a cada mensagem do cliente; envio livre dentro da janela; fora dela, só template",
+  "prioridade": "M",
+  "pontos": 3,
+  "sprint": 1
+ },
+ {
+  "id": "CT-024",
+  "epico": "E2",
+  "epicoNome": "Canal de WhatsApp",
+  "historia": "Como dono, quero templates aprovados para abertura de conversa",
+  "criterios": "pelo menos 4 templates aprovados: feedback, aniversário, aviso geral, ausência; cada um classificado como marketing ou utility com o custo anotado",
+  "prioridade": "M",
+  "pontos": 3,
+  "sprint": 1
+ },
+ {
+  "id": "CT-025",
+  "epico": "E2",
+  "epicoNome": "Canal de WhatsApp",
+  "historia": "Como sistema, quero transcrever áudios recebidos",
+  "criterios": "áudio vira texto e segue o mesmo fluxo de extração; original guardado; falha de transcrição não derruba a conversa",
+  "prioridade": "S",
+  "pontos": 3,
+  "sprint": 4
+ },
+ {
+  "id": "CT-030",
+  "epico": "E3",
+  "epicoNome": "Motor de Campanhas e Disparo em Massa",
+  "historia": "Como dono, quero criar uma campanha escolhendo público, template e horário",
+  "criterios": "seleção por segmento (ativos, inativos, prospects, aniversariantes, ausentes); preview da mensagem com variáveis reais; agendamento com data e hora",
+  "prioridade": "M",
+  "pontos": 8,
+  "sprint": 3
+ },
+ {
+  "id": "CT-031",
+  "epico": "E3",
+  "epicoNome": "Motor de Campanhas e Disparo em Massa",
+  "historia": "Como sistema, quero disparar em lote com throttling e sem duplicar",
+  "criterios": "fila com taxa configurável por minuto; chave idempotente `campanha_id + membro_id`; reprocessar a fila nunca reenvia",
+  "prioridade": "M",
+  "pontos": 8,
+  "sprint": 3
+ },
+ {
+  "id": "CT-032",
+  "epico": "E3",
+  "epicoNome": "Motor de Campanhas e Disparo em Massa",
+  "historia": "Como sistema, quero respeitar janela de horário e opt-out",
+  "criterios": "nenhum envio fora de 08:00 às 20:00; quem está em opt-out nunca entra no lote, com bloqueio em nível de banco",
+  "prioridade": "M",
+  "pontos": 3,
+  "sprint": 3
+ },
+ {
+  "id": "CT-033",
+  "epico": "E3",
+  "epicoNome": "Motor de Campanhas e Disparo em Massa",
+  "historia": "Como dono, quero ver o resultado de cada campanha",
+  "criterios": "painel com enviados, entregues, lidos, respondidos, falhas e opt-outs; custo estimado da campanha",
+  "prioridade": "M",
+  "pontos": 5,
+  "sprint": 3
+ },
+ {
+  "id": "CT-034",
+  "epico": "E3",
+  "epicoNome": "Motor de Campanhas e Disparo em Massa",
+  "historia": "Como aluno, quero conseguir sair da lista com uma palavra",
+  "criterios": "\"parar\", \"sair\", \"cancelar\" e variações encerram tudo na hora; confirmação enviada; opt-out registrado com data e origem",
+  "prioridade": "M",
+  "pontos": 3,
+  "sprint": 3
+ },
+ {
+  "id": "CT-035",
+  "epico": "E3",
+  "epicoNome": "Motor de Campanhas e Disparo em Massa",
+  "historia": "Como sistema, quero disparar felicitação de aniversário automaticamente",
+  "criterios": "cron diário; template de aniversário; sem duplicar no mesmo ano; respeita opt-out",
+  "prioridade": "M",
+  "pontos": 3,
+  "sprint": 4
+ },
+ {
+  "id": "CT-036",
+  "epico": "E3",
+  "epicoNome": "Motor de Campanhas e Disparo em Massa",
+  "historia": "Como dono, quero fazer teste com um grupo pequeno antes de mandar para todos",
+  "criterios": "modo \"disparo de teste\" com lista limitada; exige aprovação explícita para liberar o lote completo",
+  "prioridade": "M",
+  "pontos": 3,
+  "sprint": 3
+ },
+ {
+  "id": "CT-037",
+  "epico": "E3",
+  "epicoNome": "Motor de Campanhas e Disparo em Massa",
+  "historia": "Como sistema, quero pausar uma campanha em andamento",
+  "criterios": "botão de pausa que interrompe a fila em segundos; retomada continua de onde parou sem reenviar",
+  "prioridade": "S",
+  "pontos": 3,
+  "sprint": 4
+ },
+ {
+  "id": "CT-040",
+  "epico": "E4",
+  "epicoNome": "Chatbot Humanizado",
+  "historia": "Como dev, quero a interface `ProvedorIA` para trocar de LLM sem reescrever o bot",
+  "criterios": "interface única de chat e de extração estruturada; implementação do provedor escolhido; troca por variável de ambiente",
+  "prioridade": "M",
+  "pontos": 5,
+  "sprint": 2
+ },
+ {
+  "id": "CT-041",
+  "epico": "E4",
+  "epicoNome": "Chatbot Humanizado",
+  "historia": "Como aluno, quero conversar com alguém que parece gente do CT",
+  "criterios": "prompt de persona aplicado; mensagens curtas, uma pergunta por vez, PT-BR coloquial; ver [05-persona-bot.md](05-persona-bot.md)",
+  "prioridade": "M",
+  "pontos": 5,
+  "sprint": 2
+ },
+ {
+  "id": "CT-042",
+  "epico": "E4",
+  "epicoNome": "Chatbot Humanizado",
+  "historia": "Como dono, quero que o bot nunca soe como robô de IA",
+  "criterios": "filtro determinístico de pós-processamento: remove travessão, limita emoji, quebra parágrafo longo, corta abertura corporativa; testes automatizados cobrindo cada regra",
+  "prioridade": "M",
+  "pontos": 3,
+  "sprint": 2
+ },
+ {
+  "id": "CT-043",
+  "epico": "E4",
+  "epicoNome": "Chatbot Humanizado",
+  "historia": "Como sistema, quero manter contexto da conversa entre mensagens",
+  "criterios": "histórico da conversa carregado a cada turno com limite de tokens; retomada correta depois de horas de silêncio",
+  "prioridade": "M",
+  "pontos": 5,
+  "sprint": 2
+ },
+ {
+  "id": "CT-044",
+  "epico": "E4",
+  "epicoNome": "Chatbot Humanizado",
+  "historia": "Como sistema, quero simular ritmo humano de digitação",
+  "criterios": "indicador de digitando; atraso proporcional ao tamanho da mensagem, com teto; mensagem longa quebrada em duas",
+  "prioridade": "S",
+  "pontos": 2,
+  "sprint": 2
+ },
+ {
+  "id": "CT-045",
+  "epico": "E4",
+  "epicoNome": "Chatbot Humanizado",
+  "historia": "Como sistema, quero um guardrail de escopo e de honestidade",
+  "criterios": "o bot não fala de preço, contrato nem assunto médico sem encaminhar para humano; se perguntarem direto se é robô, ele não mente; nunca inventa informação da academia",
+  "prioridade": "M",
+  "pontos": 3,
+  "sprint": 2
+ },
+ {
+  "id": "CT-046",
+  "epico": "E4",
+  "epicoNome": "Chatbot Humanizado",
+  "historia": "Como atendente, quero assumir a conversa quando necessário",
+  "criterios": "botão de \"assumir\" no painel; bot silencia enquanto humano está no controle; devolução explícita",
+  "prioridade": "S",
+  "pontos": 5,
+  "sprint": 4
+ },
+ {
+  "id": "CT-047",
+  "epico": "E4",
+  "epicoNome": "Chatbot Humanizado",
+  "historia": "Como sistema, quero classificar a intenção de toda mensagem recebida",
+  "criterios": "toda mensagem entra com intenção classificada (feedback, dúvida, reclamação, agendamento, comercial, outro); usada para roteamento e para o painel",
+  "prioridade": "M",
+  "pontos": 5,
+  "sprint": 4
+ },
+ {
+  "id": "CT-050",
+  "epico": "E5",
+  "epicoNome": "Coleta de Dados e Pesquisa",
+  "historia": "Como dono, quero a pesquisa de satisfação rodando dentro do WhatsApp",
+  "criterios": "roteiro completo de [06-pesquisa-satisfacao.md](06-pesquisa-satisfacao.md); uma pergunta por mensagem; aceita resposta fora do formato e reinterpreta; permite pular pergunta",
+  "prioridade": "M",
+  "pontos": 8,
+  "sprint": 2
+ },
+ {
+  "id": "CT-051",
+  "epico": "E5",
+  "epicoNome": "Coleta de Dados e Pesquisa",
+  "historia": "Como sistema, quero gravar toda resposta em formato estruturado",
+  "criterios": "nota vira inteiro, opção vira enum, texto vira texto mais extração; nada fica só como texto solto; schema validado antes de gravar",
+  "prioridade": "M",
+  "pontos": 5,
+  "sprint": 2
+ },
+ {
+  "id": "CT-052",
+  "epico": "E5",
+  "epicoNome": "Coleta de Dados e Pesquisa",
+  "historia": "Como dono, quero o NPS calculado automaticamente",
+  "criterios": "promotores, neutros e detratores segundo a régua padrão; NPS do período e evolução mês a mês",
+  "prioridade": "M",
+  "pontos": 3,
+  "sprint": 2
+ },
+ {
+  "id": "CT-053",
+  "epico": "E5",
+  "epicoNome": "Coleta de Dados e Pesquisa",
+  "historia": "Como sistema, quero extrair categoria, sentimento e entidades de todo texto livre",
+  "criterios": "job de extração devolvendo JSON validado: categoria, sentimento, urgência, entidades (equipamento, professor, horário, local) e tags; taxonomia versionada",
+  "prioridade": "M",
+  "pontos": 8,
+  "sprint": 2
+ },
+ {
+  "id": "CT-054",
+  "epico": "E5",
+  "epicoNome": "Coleta de Dados e Pesquisa",
+  "historia": "Como dono, quero retomar quem começou e não terminou a pesquisa",
+  "criterios": "lembrete único após 24h dentro da janela ou por template; retomada do ponto onde parou; no máximo um lembrete por pessoa",
+  "prioridade": "S",
+  "pontos": 3,
+  "sprint": 4
+ },
+ {
+  "id": "CT-055",
+  "epico": "E5",
+  "epicoNome": "Coleta de Dados e Pesquisa",
+  "historia": "Como dono, quero um alerta imediato quando alguém der nota crítica",
+  "criterios": "nota ≤ 2 em qualquer item ou NPS ≤ 6 gera alerta no painel e notificação; resposta marcada como prioridade de retorno",
+  "prioridade": "M",
+  "pontos": 5,
+  "sprint": 4
+ },
+ {
+  "id": "CT-056",
+  "epico": "E5",
+  "epicoNome": "Coleta de Dados e Pesquisa",
+  "historia": "Como dono, quero perguntar coisas novas sem precisar de deploy",
+  "criterios": "pesquisas e perguntas cadastráveis no painel, com versionamento; respostas antigas continuam ligadas à versão da pesquisa que responderam",
+  "prioridade": "S",
+  "pontos": 8,
+  "sprint": 5
+ },
+ {
+  "id": "CT-057",
+  "epico": "E5",
+  "epicoNome": "Coleta de Dados e Pesquisa",
+  "historia": "Como dono, quero o perfil de cada aluno enriquecido pelas conversas",
+  "criterios": "ficha do aluno mostra tags acumuladas, temas recorrentes, sentimento médio e histórico de notas",
+  "prioridade": "M",
+  "pontos": 5,
+  "sprint": 5
+ },
+ {
+  "id": "CT-058",
+  "epico": "E5",
+  "epicoNome": "Coleta de Dados e Pesquisa",
+  "historia": "Como sistema, quero capturar dado de perfil no meio da conversa, sem soar como formulário",
+  "criterios": "objetivo, horário preferido, modalidade favorita e como conheceu a academia capturados de forma conversacional e gravados em campo próprio",
+  "prioridade": "M",
+  "pontos": 5,
+  "sprint": 5
+ },
+ {
+  "id": "CT-059",
+  "epico": "E5",
+  "epicoNome": "Coleta de Dados e Pesquisa",
+  "historia": "Como dono, quero exportar tudo que foi coletado",
+  "criterios": "exportação CSV e XLSX por período, por segmento e por campanha",
+  "prioridade": "S",
+  "pontos": 3,
+  "sprint": 5
+ },
+ {
+  "id": "CT-060",
+  "epico": "E6",
+  "epicoNome": "Painel Web do Dono",
+  "historia": "Como dono, quero abrir um painel e ver o essencial na primeira tela",
+  "criterios": "totais de alunos ativos, contatos válidos, respostas coletadas, NPS atual e alertas críticos abertos",
+  "prioridade": "M",
+  "pontos": 5,
+  "sprint": 3
+ },
+ {
+  "id": "CT-061",
+  "epico": "E6",
+  "epicoNome": "Painel Web do Dono",
+  "historia": "Como dono, quero listar e buscar clientes",
+  "criterios": "lista com busca por nome e telefone, filtro por status, plano e tags; paginada",
+  "prioridade": "M",
+  "pontos": 5,
+  "sprint": 1
+ },
+ {
+  "id": "CT-062",
+  "epico": "E6",
+  "epicoNome": "Painel Web do Dono",
+  "historia": "Como dono, quero abrir a ficha de um cliente e ver tudo dele",
+  "criterios": "dados do EVO, consentimento, histórico de campanhas, respostas, tags e insights",
+  "prioridade": "M",
+  "pontos": 5,
+  "sprint": 3
+ },
+ {
+  "id": "CT-063",
+  "epico": "E6",
+  "epicoNome": "Painel Web do Dono",
+  "historia": "Como dono, quero ler as conversas do WhatsApp",
+  "criterios": "thread completa em ordem, com mídia e status de entrega; busca por texto dentro das conversas",
+  "prioridade": "M",
+  "pontos": 5,
+  "sprint": 1
+ },
+ {
+  "id": "CT-064",
+  "epico": "E6",
+  "epicoNome": "Painel Web do Dono",
+  "historia": "Como dono, quero ver as respostas da pesquisa consolidadas",
+  "criterios": "média por item avaliado, distribuição de notas, NPS e lista de respostas abertas com filtro por categoria e sentimento",
+  "prioridade": "M",
+  "pontos": 8,
+  "sprint": 3
+ },
+ {
+  "id": "CT-065",
+  "epico": "E6",
+  "epicoNome": "Painel Web do Dono",
+  "historia": "Como dono, quero ver o que mais aparece nas respostas abertas",
+  "criterios": "ranking de categorias e tags no período; clicar abre as respostas originais que sustentam o número",
+  "prioridade": "M",
+  "pontos": 5,
+  "sprint": 5
+ },
+ {
+  "id": "CT-066",
+  "epico": "E6",
+  "epicoNome": "Painel Web do Dono",
+  "historia": "Como dono, quero ver quem está prestes a sair",
+  "criterios": "lista de risco combinando ausência, NPS baixo e reclamação recente, ordenada por risco",
+  "prioridade": "S",
+  "pontos": 8,
+  "sprint": 5
+ },
+ {
+  "id": "CT-070",
+  "epico": "E7",
+  "epicoNome": "Retenção e Ausência",
+  "historia": "Como dono, quero que quem não aparece há 3 dias receba uma mensagem",
+  "criterios": "cron diário sobre os check-ins; limiar configurável; template classificado como utility; no máximo uma mensagem por período de ausência",
+  "prioridade": "M",
+  "pontos": 5,
+  "sprint": 4
+ },
+ {
+  "id": "CT-071",
+  "epico": "E7",
+  "epicoNome": "Retenção e Ausência",
+  "historia": "Como dono, quero saber o motivo de quem sumiu",
+  "criterios": "resposta ao lembrete vira conversa curta com motivo classificado (lesão, tempo, preço, desmotivação, mudança, outro)",
+  "prioridade": "M",
+  "pontos": 5,
+  "sprint": 4
+ },
+ {
+  "id": "CT-072",
+  "epico": "E7",
+  "epicoNome": "Retenção e Ausência",
+  "historia": "Como dono, quero escalonar a régua de reengajamento",
+  "criterios": "mensagens em 3, 7, 15 e 30 dias com tom e oferta diferentes; para na hora em que a pessoa volta a passar na catraca",
+  "prioridade": "S",
+  "pontos": 5,
+  "sprint": 5
+ },
+ {
+  "id": "CT-073",
+  "epico": "E7",
+  "epicoNome": "Retenção e Ausência",
+  "historia": "Como dono, quero medir se o lembrete funciona",
+  "criterios": "taxa de retorno em até 7 dias dos que receberam, comparada com grupo de controle",
+  "prioridade": "S",
+  "pontos": 5,
+  "sprint": 5
+ },
+ {
+  "id": "CT-080",
+  "epico": "E8",
+  "epicoNome": "Agendamento e Reservas",
+  "historia": "Como aluno, quero reservar a sala Recovery pelo WhatsApp",
+  "criterios": "bot mostra horários livres, confirma reserva, envia lembrete e permite cancelar; sem overbooking, com trava de concorrência",
+  "prioridade": "M",
+  "pontos": 8,
+  "sprint": 6
+ },
+ {
+  "id": "CT-081",
+  "epico": "E8",
+  "epicoNome": "Agendamento e Reservas",
+  "historia": "Como atendente, quero ver e gerenciar a agenda do Recovery no painel",
+  "criterios": "visão de dia e semana; criar, remarcar e cancelar; bloquear horário para manutenção",
+  "prioridade": "M",
+  "pontos": 5,
+  "sprint": 6
+ },
+ {
+  "id": "CT-082",
+  "epico": "E8",
+  "epicoNome": "Agendamento e Reservas",
+  "historia": "Como dono, quero configurar as regras da sala Recovery",
+  "criterios": "duração do slot, capacidade simultânea, antecedência mínima e máxima, limite por aluno por semana, horário de funcionamento",
+  "prioridade": "M",
+  "pontos": 5,
+  "sprint": 6
+ },
+ {
+  "id": "CT-083",
+  "epico": "E8",
+  "epicoNome": "Agendamento e Reservas",
+  "historia": "Como aluno, quero reservar a quadra de areia parceira",
+  "criterios": "mesmo fluxo do Recovery, com calendário e regras próprias da quadra; modalidade informada na reserva",
+  "prioridade": "S",
+  "pontos": 5,
+  "sprint": 6
+ },
+ {
+  "id": "CT-084",
+  "epico": "E8",
+  "epicoNome": "Agendamento e Reservas",
+  "historia": "Como dono, quero que o no-show tenha consequência",
+  "criterios": "marcação de comparecimento; contagem de faltas; bloqueio temporário configurável após N faltas",
+  "prioridade": "C",
+  "pontos": 5,
+  "sprint": 6
+ },
+ {
+  "id": "CT-085",
+  "epico": "E8",
+  "epicoNome": "Agendamento e Reservas",
+  "historia": "Como sistema, quero refletir a reserva no EVO quando fizer sentido",
+  "criterios": "avaliar `POST /api/v2/activities/booking`; se o EVO for a agenda oficial, ele vira a fonte da verdade e nós só orquestramos",
+  "prioridade": "S",
+  "pontos": 5,
+  "sprint": 6
+ },
+ {
+  "id": "CT-090",
+  "epico": "E9",
+  "epicoNome": "Financeiro Automatizado",
+  "historia": "Como dono, quero ver receita, inadimplência e previsão sem abrir o EVO",
+  "criterios": "sincronismo de contas a receber e faturas; painel com recebido, a receber, vencido e previsto do mês",
+  "prioridade": "M",
+  "pontos": 8,
+  "sprint": 7
+ },
+ {
+  "id": "CT-091",
+  "epico": "E9",
+  "epicoNome": "Financeiro Automatizado",
+  "historia": "Como sistema, quero cobrar automaticamente quem está em atraso",
+  "criterios": "régua de cobrança por WhatsApp em D+1, D+5 e D+15, com link de pagamento; para de cobrar assim que baixa",
+  "prioridade": "M",
+  "pontos": 8,
+  "sprint": 7
+ },
+ {
+  "id": "CT-092",
+  "epico": "E9",
+  "epicoNome": "Financeiro Automatizado",
+  "historia": "Como dono, quero acompanhar entradas, saídas e margem",
+  "criterios": "lançamento de despesas por categoria; DRE simplificado mensal",
+  "prioridade": "S",
+  "pontos": 8,
+  "sprint": 7
+ },
+ {
+  "id": "CT-093",
+  "epico": "E9",
+  "epicoNome": "Financeiro Automatizado",
+  "historia": "Como dono, quero ver churn e receita recorrente",
+  "criterios": "MRR, churn mensal, ticket médio e tempo médio de permanência",
+  "prioridade": "S",
+  "pontos": 5,
+  "sprint": 7
+ },
+ {
+  "id": "CT-094",
+  "epico": "E9",
+  "epicoNome": "Financeiro Automatizado",
+  "historia": "Como dono, quero conciliar o que entrou de verdade",
+  "criterios": "conciliação entre baixa no EVO e extrato; divergências listadas",
+  "prioridade": "C",
+  "pontos": 8,
+  "sprint": 7
+ },
+ {
+  "id": "CT-100",
+  "epico": "E10",
+  "epicoNome": "BI e Dashboards",
+  "historia": "Como dono, quero um dashboard executivo com o que importa",
+  "criterios": "alunos ativos, entradas e saídas do mês, frequência média, NPS, receita e alertas críticos, tudo em uma tela",
+  "prioridade": "M",
+  "pontos": 8,
+  "sprint": 8
+ },
+ {
+  "id": "CT-101",
+  "epico": "E10",
+  "epicoNome": "BI e Dashboards",
+  "historia": "Como dono, quero ver como a satisfação evolui",
+  "criterios": "série histórica de NPS e das notas por item avaliado, com comparação entre períodos",
+  "prioridade": "M",
+  "pontos": 5,
+  "sprint": 8
+ },
+ {
+  "id": "CT-102",
+  "epico": "E10",
+  "epicoNome": "BI e Dashboards",
+  "historia": "Como dono, quero entender os horários de pico",
+  "criterios": "mapa de calor de frequência por dia e faixa horária a partir da catraca",
+  "prioridade": "S",
+  "pontos": 5,
+  "sprint": 8
+ },
+ {
+  "id": "CT-103",
+  "epico": "E10",
+  "epicoNome": "BI e Dashboards",
+  "historia": "Como dono, quero receber um resumo semanal automático",
+  "criterios": "mensagem ou e-mail toda segunda com números da semana e os 3 pontos que mais apareceram nas respostas abertas",
+  "prioridade": "S",
+  "pontos": 5,
+  "sprint": 8
+ },
+ {
+  "id": "CT-104",
+  "epico": "E10",
+  "epicoNome": "BI e Dashboards",
+  "historia": "Como dono, quero perguntar em linguagem natural sobre a base",
+  "criterios": "pergunta em texto vira consulta e resposta com número e fonte; somente leitura, restrito ao ADM",
+  "prioridade": "C",
+  "pontos": 13,
+  "sprint": 9
+ },
+ {
+  "id": "CT-110",
+  "epico": "E11",
+  "epicoNome": "Operação Interna",
+  "historia": "Como atendente, quero abrir um chamado quando algo quebra ou suja",
+  "criterios": "tipo, local, descrição, foto e prioridade; chamado criado em segundos",
+  "prioridade": "M",
+  "pontos": 5,
+  "sprint": 8
+ },
+ {
+  "id": "CT-111",
+  "epico": "E11",
+  "epicoNome": "Operação Interna",
+  "historia": "Como equipe, quero ser avisado na hora que um chamado é aberto",
+  "criterios": "notificação para os papéis responsáveis pelo tipo do chamado, com o ADM sempre incluído",
+  "prioridade": "M",
+  "pontos": 5,
+  "sprint": 8
+ },
+ {
+  "id": "CT-112",
+  "epico": "E11",
+  "epicoNome": "Operação Interna",
+  "historia": "Como gerente, quero acompanhar o ciclo do chamado",
+  "criterios": "estados aberto, em andamento e resolvido; responsável; tempo de resolução medido",
+  "prioridade": "M",
+  "pontos": 5,
+  "sprint": 8
+ },
+ {
+  "id": "CT-113",
+  "epico": "E11",
+  "epicoNome": "Operação Interna",
+  "historia": "Como equipe, quero um alarme para urgência real",
+  "criterios": "prioridade urgente dispara notificação imediata e fica destacada até alguém assumir",
+  "prioridade": "M",
+  "pontos": 3,
+  "sprint": 8
+ },
+ {
+  "id": "CT-114",
+  "epico": "E11",
+  "epicoNome": "Operação Interna",
+  "historia": "Como funcionário, quero um chat interno separado por função",
+  "criterios": "canais por função e canal geral; ADM lê todos os canais; histórico pesquisável",
+  "prioridade": "S",
+  "pontos": 8,
+  "sprint": 9
+ },
+ {
+  "id": "CT-115",
+  "epico": "E11",
+  "epicoNome": "Operação Interna",
+  "historia": "Como gerente, quero montar a escala de turnos dos professores",
+  "criterios": "grade semanal por professor; turnos alternados; conflito detectado na hora",
+  "prioridade": "M",
+  "pontos": 8,
+  "sprint": 9
+ },
+ {
+  "id": "CT-116",
+  "epico": "E11",
+  "epicoNome": "Operação Interna",
+  "historia": "Como professor, quero registrar entrada e saída",
+  "criterios": "ponto por turno; espelho mensal; ADM vê horas trabalhadas e faltas",
+  "prioridade": "S",
+  "pontos": 5,
+  "sprint": 9
+ },
+ {
+  "id": "CT-117",
+  "epico": "E11",
+  "epicoNome": "Operação Interna",
+  "historia": "Como professor, quero pedir troca de turno com outro colega",
+  "criterios": "pedido, aceite do colega e aprovação do gerente; escala atualizada automaticamente",
+  "prioridade": "C",
+  "pontos": 5,
+  "sprint": 9
+ },
+ {
+  "id": "CT-120",
+  "epico": "E12",
+  "epicoNome": "Gamificação e Bonificação",
+  "historia": "Como dono, quero pontuar indicações e contratos fechados",
+  "criterios": "regras configuráveis de pontos por evento; pontuação creditada ao atendente ou professor responsável",
+  "prioridade": "M",
+  "pontos": 8,
+  "sprint": 10
+ },
+ {
+  "id": "CT-121",
+  "epico": "E12",
+  "epicoNome": "Gamificação e Bonificação",
+  "historia": "Como sistema, quero identificar a origem da indicação",
+  "criterios": "aluno indicado informa quem indicou, ou link e código próprio de cada funcionário; crédito automático",
+  "prioridade": "M",
+  "pontos": 5,
+  "sprint": 10
+ },
+ {
+  "id": "CT-122",
+  "epico": "E12",
+  "epicoNome": "Gamificação e Bonificação",
+  "historia": "Como equipe, quero ver o ranking do mês",
+  "criterios": "ranking por função com pontos e posição; histórico dos meses anteriores",
+  "prioridade": "S",
+  "pontos": 5,
+  "sprint": 10
+ },
+ {
+  "id": "CT-123",
+  "epico": "E12",
+  "epicoNome": "Gamificação e Bonificação",
+  "historia": "Como dono, quero calcular a bonificação do período",
+  "criterios": "fechamento mensal com pontos, regra de bonificação e valor a pagar por pessoa",
+  "prioridade": "S",
+  "pontos": 5,
+  "sprint": 10
+ },
+ {
+  "id": "CT-130",
+  "epico": "E13",
+  "epicoNome": "App do Cliente",
+  "historia": "Como aluno, quero entrar no app com meu cadastro do CT",
+  "criterios": "autenticação ligada ao cadastro do EVO; recuperação de acesso",
+  "prioridade": "M",
+  "pontos": 8,
+  "sprint": 11
+ },
+ {
+  "id": "CT-131",
+  "epico": "E13",
+  "epicoNome": "App do Cliente",
+  "historia": "Como aluno, quero ver disponibilidade e reservar Recovery e quadra",
+  "criterios": "mesma regra de negócio das reservas do WhatsApp, sem duplicar lógica",
+  "prioridade": "M",
+  "pontos": 8,
+  "sprint": 11
+ },
+ {
+  "id": "CT-132",
+  "epico": "E13",
+  "epicoNome": "App do Cliente",
+  "historia": "Como aluno, quero receber avisos da academia",
+  "criterios": "push de avisos gerais e lembretes; respeitando preferência de notificação",
+  "prioridade": "M",
+  "pontos": 5,
+  "sprint": 11
+ },
+ {
+  "id": "CT-133",
+  "epico": "E13",
+  "epicoNome": "App do Cliente",
+  "historia": "Como aluno, quero ver minha frequência e evolução",
+  "criterios": "check-ins do mês, sequência e comparação com o próprio histórico",
+  "prioridade": "S",
+  "pontos": 5,
+  "sprint": 11
+ },
+ {
+  "id": "CT-134",
+  "epico": "E13",
+  "epicoNome": "App do Cliente",
+  "historia": "Como aluno, quero responder pesquisas pelo app também",
+  "criterios": "mesma pesquisa do WhatsApp, mesma gravação estruturada",
+  "prioridade": "S",
+  "pontos": 5,
+  "sprint": 11
+ },
+ {
+  "id": "CT-135",
+  "epico": "E13",
+  "epicoNome": "App do Cliente",
+  "historia": "Como aluno, quero ver meu financeiro",
+  "criterios": "mensalidade, vencimento, situação e segunda via",
+  "prioridade": "S",
+  "pontos": 5,
+  "sprint": 11
+ },
+ {
+  "id": "CT-140",
+  "epico": "E14",
+  "epicoNome": "Loja de Comida (restaurante parceiro)",
+  "historia": "Como PO, quero descobrir o modelo de negócio com o restaurante antes de especificar",
+  "criterios": "reunião com o parceiro; definido quem cobra, quem entrega, se há comissão e se existe cardápio digital hoje",
+  "prioridade": "C",
+  "pontos": 3,
+  "sprint": 9
+ },
+ {
+  "id": "CT-141",
+  "epico": "E14",
+  "epicoNome": "Loja de Comida (restaurante parceiro)",
+  "historia": "Como aluno, quero ver o cardápio e pedir pelo app",
+  "criterios": "escopo a definir depois de CT-140",
+  "prioridade": "W",
+  "pontos": 0,
+  "sprint": null
+ }
+]
