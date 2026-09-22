@@ -12,6 +12,7 @@ Saída da reunião de PO com o dono da academia, em 18/09/2026.
 | [05-persona-bot.md](05-persona-bot.md) | Como o bot fala, o que é proibido, e o filtro em código que garante isso |
 | [06-pesquisa-satisfacao.md](06-pesquisa-satisfacao.md) | O formulário do dono convertido em conversa de WhatsApp, com o que gravar |
 | [07-setup.md](07-setup.md) | Como rodar na máquina, como publicar no Railway, e o que já está pronto no código |
+| [08-evo-api.md](08-evo-api.md) | **Referência da EVO API.** Cota, filtros, campos reais e as armadilhas encontradas |
 
 ## Quadro kanban
 
@@ -30,9 +31,30 @@ Para levar para Jira, Trello ou outro: [backlog-jira.csv](backlog-jira.csv), ou 
 | O formulário da RN Movement | É só referência de conteúdo, o dono gostou do formato. Todo texto sai com o nome **CT Saúde Total** |
 | Canal de WhatsApp | Cloud API oficial da Meta. Ver [01](01-arquitetura.md), seção 6 |
 
-## Único bloqueio em aberto
+## Decisões tomadas em 22/09/2026
 
-**O plano do EVO da academia libera API?** (CT-010). Como descobrir em 5 minutos está em [01-arquitetura.md](01-arquitetura.md), seção 7.1. Nada da Sprint 1 começa sem essa resposta.
+| Decisão | Resultado |
+|---|---|
+| Plano do EVO | **Fica no API Plus.** Não vale pagar o Pro. Ver abaixo |
+| Frequência do sync | **A cada 2 horas**, incremental (só quem mudou) |
+| Número do WhatsApp | **De teste** por enquanto. O real fica para o disparo à base inteira |
+
+### Por que o plano Plus basta
+
+Eu recomendei o upgrade para o Pro e **estava errado**. A recomendação vinha de duas suposições que a especificação da API desmentiu:
+
+1. Achei que cada requisição trazia 50 alunos. O máximo é **10.000**: a base inteira de 3.167 cabe em **uma** requisição, não em 64.
+2. Existe o filtro **`updateDate`**, que traz só quem mudou. O sync diário vira uma chamada com pouca coisa dentro.
+
+Resultado: o consumo caiu de ~1.900 requisições por mês para **360**, dentro do limite de 1.000 do Plus. E com essa folga o sync passou de 1x por dia para **de 2 em 2 horas**.
+
+### E o webhook do EVO
+
+O webhook avisaria na hora que um aluno muda, em vez de esperar a próxima consulta. O único risco concreto de não ter é **alguém cancelar e ainda receber campanha**. Com o sync de 2 em 2 horas, essa janela caiu de 24 horas para 2.
+
+Pagar R$ 39,90 por mês para reduzir de 2 horas para 2 segundos não se justifica numa academia de bairro. Além disso, `GET /api/v2/webhook` **responde no plano Plus**, então talvez nem seja uma trava de plano. Ver [08-evo-api.md](08-evo-api.md).
+
+**Reavaliar se:** o dono quiser boas-vindas no momento exato da matrícula, a base crescer muito, ou aparecer reclamação real de ex-aluno recebendo mensagem.
 
 ## Decisão que ainda é do dono
 
