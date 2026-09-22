@@ -10,15 +10,26 @@ import { normalizarTelefone, type ResultadoTelefone } from '@ct/shared'
  * Mas o sync NUNCA encosta nos campos que sao nossos (tags, objetivo, como
  * conheceu), senao a cada madrugada o trabalho de coleta e apagado.
  */
-export async function sincronizarMembros(_jobs: Job[]) {
+export async function sincronizarMembros(jobs: Job<{ completo?: boolean }>[]) {
   const evo = new EvoClient()
+
+  // Sync incremental: pede so quem mudou desde a ultima sincronizacao. Um job
+  // com { completo: true } forca reler a base inteira, para a carga inicial ou
+  // quando algo divergir.
+  const completo = jobs.some((j) => j.data?.completo)
+  const ultimo = completo
+    ? null
+    : await prisma.membro.aggregate({ _max: { sincronizadoEm: true } })
+  const desde = ultimo?._max.sincronizadoEm
+    ? new Date(ultimo._max.sincronizadoEm.getTime() - 24 * 60 * 60 * 1000)
+    : undefined
   const unidade = await prisma.unidade.findFirstOrThrow()
 
   let criados = 0
   let atualizados = 0
   let semTelefone = 0
 
-  for await (const lote of evo.listarMembros()) {
+  for await (const lote of evo.listarMembros({ desde })) {
     for (const m of lote) {
       // O aluno pode ter varios contatos cadastrados. Vale o primeiro que
       // normaliza para celular valido, nao o primeiro da lista.
@@ -61,7 +72,8 @@ export async function sincronizarMembros(_jobs: Job[]) {
   const cobertura = total > 0 ? Math.round(((total - semTelefone) / total) * 100) : 0
 
   console.log(
-    `sync evo: ${criados} criados, ${atualizados} atualizados, ` +
+    `sync evo (${desde ? 'incremental desde ' + desde.toISOString().slice(0, 10) : 'completo'}): ` +
+      `${criados} criados, ${atualizados} atualizados, ` +
       `${semTelefone} sem celular valido, cobertura de contato ${cobertura}%`,
   )
 

@@ -96,15 +96,51 @@ export class EvoClient {
     throw ultimoErro ?? new EvoError('falhou sem erro registrado', 0, caminho)
   }
 
+  /** Le o cabecalho `total` da resposta, que diz o tamanho da base. */
+  private async head(caminho: string, params: Record<string, string | number> = {}): Promise<number> {
+    const url = new URL(caminho, this.baseUrl)
+    for (const [k, v] of Object.entries(params)) url.searchParams.set(k, String(v))
+    const r = await fetch(url, {
+      headers: { Authorization: this.autorizacao, Accept: 'application/json' },
+      signal: AbortSignal.timeout(this.timeoutMs),
+    })
+    if (!r.ok) throw new EvoError(`HTTP ${r.status}`, r.status, caminho)
+    return Number(r.headers.get('total') ?? 0)
+  }
+
   /**
-   * Pagina a base inteira de membros. O EVO devolve em lotes, entao isso e um
-   * gerador: quem consome grava lote a lote em vez de segurar 3 mil alunos na
-   * memoria e perder tudo se cair no meio.
+   * Lista membros.
+   *
+   * Duas coisas que mudam a conta de cota, descobertas na especificacao da
+   * API em 22/09/2026:
+   *
+   * 1. `take` aceita ate 10.000 por requisicao, nao 50. A base inteira de
+   *    3.166 alunos cabe em UMA chamada.
+   * 2. `updateDate` traz so quem mudou desde a data informada. O sync diario
+   *    vira uma requisicao com pouca coisa dentro, em vez de reler tudo.
+   *
+   * Com isso o consumo mensal sai de ~1.900 requisicoes para umas 30, bem
+   * dentro do limite de 1.000/mes do plano Plus.
+   *
+   * `showMemberships` e opcional na API e vem desligado. Sem ele nao vem
+   * contrato nenhum, e o campo plano fica vazio.
    */
-  async *listarMembros(tamanhoLote = 50): AsyncGenerator<EvoMembro[]> {
+  async *listarMembros(
+    opcoes: { desde?: Date; apenasAtivos?: boolean; tamanhoLote?: number } = {},
+  ): AsyncGenerator<EvoMembro[]> {
+    const { desde, apenasAtivos, tamanhoLote = 1000 } = opcoes
     let skip = 0
+
     while (true) {
-      const lote = await this.get<EvoMembro[]>('/api/v1/members', { take: tamanhoLote, skip })
+      const params: Record<string, string | number> = {
+        take: tamanhoLote,
+        skip,
+        showMemberships: 'true',
+      }
+      if (desde) params.updateDate = desde.toISOString().slice(0, 10)
+      if (apenasAtivos) params.status = 1
+
+      const lote = await this.get<EvoMembro[]>('/api/v2/members', params)
       if (!lote.length) return
       yield lote
       if (lote.length < tamanhoLote) return
@@ -113,7 +149,13 @@ export class EvoClient {
   }
 
   async obterMembro(idMember: number): Promise<EvoMembro> {
-    return this.get<EvoMembro>(`/api/v1/members/${idMember}`)
+    return this.get<EvoMembro>(`/api/v2/members/${idMember}`, { showMemberships: 'true' })
+  }
+
+  /** Quantos membros existem, sem baixar nenhum. Custa 1 requisicao. */
+  async contar(): Promise<number> {
+    const r = await this.head('/api/v2/members', { take: 1, skip: 0 })
+    return r
   }
 
   async *listarProspects(tamanhoLote = 50): AsyncGenerator<EvoProspect[]> {
@@ -144,8 +186,8 @@ export class EvoClient {
   /** Chamada barata para validar token e conectividade antes de rodar o sync. */
   async testarConexao(): Promise<{ ok: boolean; detalhe: string }> {
     try {
-      await this.get('/api/v1/members', { take: 1, skip: 0 })
-      return { ok: true, detalhe: 'token valido e API respondendo' }
+      const total = await this.head('/api/v2/members', { take: 1, skip: 0 })
+      return { ok: true, detalhe: `token valido, ${total} membros na base` }
     } catch (e) {
       const erro = e as EvoError
       return {
