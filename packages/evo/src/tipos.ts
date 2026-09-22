@@ -1,42 +1,70 @@
 /**
  * Tipos da EVO API.
  *
- * Marcados como parciais de proposito: estes campos foram inferidos do Swagger
- * publico (evo-integracao.w12app.com.br/swagger). Na CT-010, com token real em
- * maos, rode uma chamada, salve o JSON e ajuste isto aqui com o retorno de
- * verdade antes de escrever o sync. Nao confie neste arquivo como contrato.
+ * Estes campos foram confirmados contra a API real do CT Saúde Total em
+ * 22/09/2026, não inferidos da documentação. O que estava aqui antes
+ * (cellphone, contracts) simplesmente não existe: o telefone mora dentro de
+ * `contacts` e o contrato dentro de `memberships`.
  */
+
+/** Um contato do aluno. O telefone fica em `description`, não num campo próprio. */
+export interface EvoContato {
+  idPhone: number
+  idMember: number | null
+  idContactType: number
+  /** Texto livre vindo do EVO: "Celular", "Email", "Telefone" e afins. */
+  contactType: string
+  /** Código do país, normalmente "55". */
+  ddi: string
+  /** O valor em si: o número ou o e-mail. */
+  description: string
+}
+
+/** Um contrato. Um aluno pode ter vários, inclusive já cancelados. */
+export interface EvoMembership {
+  idMembership: number
+  idMemberMembership: number
+  name: string
+  startDate: string
+  endDate: string | null
+  membershipStatus: string
+  cancelDate: string | null
+  saleDate: string | null
+  idCategoryMembership: number | null
+}
 
 export interface EvoMembro {
   idMember: number
   firstName?: string
   lastName?: string
-  name?: string
+  registerName?: string
+  registerLastName?: string
   document?: string
-  email?: string
-  cellphone?: string
-  phone?: string
+  gender?: string
   birthDate?: string
   registerDate?: string
+  /** Última passagem na catraca. Base do lembrete de ausência (CT-070). */
+  lastAccessDate?: string | null
   status?: string
   membershipStatus?: string
+  accessBlocked?: boolean
+  blockedReason?: string | null
   idBranch?: number
-  contracts?: Array<{
-    idMembership?: number
-    name?: string
-    startDate?: string
-    endDate?: string
-    status?: string
-  }>
+  branchName?: string
+  city?: string
+  state?: string
+  photoUrl?: string | null
+  contacts?: EvoContato[]
+  memberships?: EvoMembership[]
 }
 
 export interface EvoProspect {
   idProspect: number
-  name?: string
-  email?: string
-  cellphone?: string
+  firstName?: string
+  lastName?: string
   registerDate?: string
   status?: string
+  contacts?: EvoContato[]
 }
 
 export interface EvoEntrada {
@@ -47,21 +75,53 @@ export interface EvoEntrada {
   idBranch?: number
 }
 
-/** Mapeia o status do EVO para o nosso enum. Regra fica num lugar so. */
+/** O EVO devolve "Active" e "Inactive". Regra fica num lugar só. */
 export function mapearStatus(evo: string | undefined): 'ATIVO' | 'INATIVO' | 'CANCELADO' | 'PROSPECT' {
   const s = (evo ?? '').toLowerCase()
-  if (s.includes('ativ')) return 'ATIVO'
+  if (s.startsWith('activ') || s.includes('ativ')) return 'ATIVO'
   if (s.includes('cancel')) return 'CANCELADO'
   if (s.includes('prospect')) return 'PROSPECT'
   return 'INATIVO'
 }
 
-/** O EVO devolve nome em campos diferentes dependendo do endpoint. */
 export function nomeDoMembro(m: EvoMembro): string {
-  return m.name ?? [m.firstName, m.lastName].filter(Boolean).join(' ') ?? 'Aluno'
+  const partes = [m.firstName ?? m.registerName, m.lastName ?? m.registerLastName]
+  const nome = partes.filter(Boolean).join(' ').trim()
+  return nome || 'Aluno'
 }
 
-/** Celular primeiro: fixo nao recebe WhatsApp. */
-export function telefoneDoMembro(m: EvoMembro): string | null {
-  return m.cellphone ?? m.phone ?? null
+/**
+ * Acha o celular do aluno dentro de `contacts`.
+ *
+ * O EVO não separa telefone de e-mail por campo, tudo cai em `description` e o
+ * tipo vem como texto livre em `contactType`. Então a estratégia é: tentar
+ * primeiro os contatos que dizem ser celular, e se nenhum servir, varrer todos.
+ * Quem decide se presta é a normalização, não o rótulo do EVO.
+ */
+export function telefonesDoMembro(m: EvoMembro): string[] {
+  const contatos = m.contacts ?? []
+  const pareceCelular = (c: EvoContato) => /cel|mobil|whats/i.test(c.contactType ?? '')
+
+  const ordenados = [...contatos.filter(pareceCelular), ...contatos.filter((c) => !pareceCelular(c))]
+
+  return ordenados
+    .map((c) => {
+      const valor = (c.description ?? '').trim()
+      if (!valor || valor.includes('@')) return null
+      const ddi = (c.ddi ?? '').replace(/\D/g, '')
+      // Só prefixa o DDI quando o número ainda não o carrega.
+      return ddi && !valor.replace(/\D/g, '').startsWith(ddi) ? `+${ddi}${valor}` : valor
+    })
+    .filter((v): v is string => !!v)
+}
+
+/** Contrato vigente, ou o mais recente se nenhum estiver ativo. */
+export function contratoAtual(m: EvoMembro): EvoMembership | null {
+  const lista = m.memberships ?? []
+  if (!lista.length) return null
+
+  const ativo = lista.find((c) => mapearStatus(c.membershipStatus) === 'ATIVO' && !c.cancelDate)
+  if (ativo) return ativo
+
+  return [...lista].sort((a, b) => (b.startDate ?? '').localeCompare(a.startDate ?? ''))[0] ?? null
 }

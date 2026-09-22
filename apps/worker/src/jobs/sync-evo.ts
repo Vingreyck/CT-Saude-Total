@@ -1,7 +1,7 @@
 import type { Job } from 'pg-boss'
 import { prisma } from '@ct/db'
-import { EvoClient, mapearStatus, nomeDoMembro, telefoneDoMembro } from '@ct/evo'
-import { normalizarTelefone } from '@ct/shared'
+import { EvoClient, contratoAtual, mapearStatus, nomeDoMembro, telefonesDoMembro } from '@ct/evo'
+import { normalizarTelefone, type ResultadoTelefone } from '@ct/shared'
 
 /**
  * Espelha a base do EVO (CT-012 + CT-013 + CT-014).
@@ -20,18 +20,24 @@ export async function sincronizarMembros(_jobs: Job[]) {
 
   for await (const lote of evo.listarMembros()) {
     for (const m of lote) {
-      const tel = normalizarTelefone(telefoneDoMembro(m))
-      if (!tel.valido || !tel.movel) semTelefone++
+      // O aluno pode ter varios contatos cadastrados. Vale o primeiro que
+      // normaliza para celular valido, nao o primeiro da lista.
+      const tel = telefonesDoMembro(m)
+        .map(normalizarTelefone)
+        .find((r): r is Extract<ResultadoTelefone, { valido: true }> => r.valido && r.movel)
+      if (!tel) semTelefone++
+
+      const contrato = contratoAtual(m)
 
       const espelho = {
         nome: nomeDoMembro(m),
-        telefoneE164: tel.valido ? tel.e164 : null,
-        telefoneValido: tel.valido && tel.movel,
-        email: m.email ?? null,
+        telefoneE164: tel ? tel.e164 : null,
+        telefoneValido: !!tel,
         nascimento: m.birthDate ? new Date(m.birthDate) : null,
         status: mapearStatus(m.status ?? m.membershipStatus),
-        plano: m.contracts?.[0]?.name ?? null,
-        inicioContrato: m.contracts?.[0]?.startDate ? new Date(m.contracts[0].startDate) : null,
+        plano: contrato?.name ?? null,
+        inicioContrato: contrato?.startDate ? new Date(contrato.startDate) : null,
+        fimContrato: contrato?.endDate ? new Date(contrato.endDate) : null,
         sincronizadoEm: new Date(),
         payloadEvo: m as object,
       }
