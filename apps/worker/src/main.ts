@@ -37,8 +37,13 @@ async function main() {
   await boss.work(FILAS.EXTRACAO, { batchSize: 10 }, extrairInsight)
 
   // --- crons (horario de Sao Paulo) ---------------------------------------
-  // Sync as 4h: base do EVO fresca antes de qualquer campanha do dia.
-  await boss.schedule(FILAS.SYNC_EVO, '0 4 * * *', {}, { tz: 'America/Sao_Paulo' })
+  // Sync a cada 2 horas. Virou possivel depois que o client passou a puxar a
+  // base inteira em UMA requisicao com filtro de "so quem mudou": sao 12
+  // chamadas por dia, 360 por mes, dentro dos 1.000 do plano Plus.
+  //
+  // Isso encurta de 24h para 2h a janela em que alguem que cancelou ainda
+  // poderia receber campanha, que era o unico motivo real para querer webhook.
+  await boss.schedule(FILAS.SYNC_EVO, '0 */2 * * *', {}, { tz: 'America/Sao_Paulo' })
 
   // Ausencia as 10h: quem nao passa na catraca ha 3 dias (CT-070).
   await boss.work(FILAS.AUSENCIA, verificarAusencias)
