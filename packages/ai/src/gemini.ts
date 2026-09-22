@@ -163,7 +163,12 @@ export class ProvedorGemini implements ProvedorIA {
         // Conversa de WhatsApp: resposta curta e com alguma variacao, senao
         // o bot repete a mesma formula a cada turno e fica obvio.
         temperature: 0.9,
-        maxOutputTokens: 400,
+        // Os modelos 3.x "pensam" antes de escrever, e o raciocinio consome
+        // este mesmo orcamento. Com 400 a resposta saia cortada no meio da
+        // frase. Desligar o pensamento resolve e ainda deixa mais rapido:
+        // conversa de pesquisa nao precisa de raciocinio profundo.
+        thinkingConfig: { thinkingBudget: 0 },
+        maxOutputTokens: 800,
       },
     })
 
