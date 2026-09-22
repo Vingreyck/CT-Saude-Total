@@ -94,6 +94,22 @@ export default async function Home() {
         <Cartao rotulo="Alertas críticos" valor={String(n.alertas)} />
       </section>
 
+      <section style={{ marginBottom: 32 }}>
+        <a
+          href="/laboratorio"
+          style={{
+            display: 'inline-block', padding: '11px 16px', borderRadius: 10,
+            background: 'var(--destaque)', color: '#08140d', fontWeight: 600,
+            textDecoration: 'none', fontSize: 14,
+          }}
+        >
+          Abrir o laboratório e conversar com o bot
+        </a>
+        <p style={{ color: 'var(--suave)', fontSize: 13, marginTop: 8 }}>
+          Fale como se fosse o aluno e veja a conversa virar dado estruturado, sem WhatsApp.
+        </p>
+      </section>
+
       <section className="proximas">
         <h2>Próximas telas</h2>
         <ul>

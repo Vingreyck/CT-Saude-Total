@@ -71,3 +71,82 @@ header p { color: var(--suave); font-size: 14px; }
   main { padding: 28px 16px; }
   .cartao .valor { font-size: 24px; }
 }
+
+/* ---------- laboratorio ---------- */
+.lab header { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; }
+.cabecalho-acoes { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+.pilula {
+  font-size: 11px; color: var(--suave);
+  border: 1px solid var(--borda); border-radius: 999px; padding: 3px 9px;
+  white-space: nowrap;
+}
+button {
+  font: inherit; font-size: 12px; color: var(--texto);
+  background: var(--superficie); border: 1px solid var(--borda);
+  border-radius: 8px; padding: 7px 12px; cursor: pointer;
+}
+button:hover { border-color: var(--suave); }
+button:disabled { opacity: .45; cursor: not-allowed; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--destaque); outline-offset: 2px; }
+
+.colunas { display: grid; grid-template-columns: 1fr 340px; gap: 14px; align-items: start; }
+
+.chat {
+  background: var(--superficie); border: 1px solid var(--borda);
+  border-radius: 14px; display: flex; flex-direction: column;
+  height: min(620px, 72vh);
+}
+.fluxo { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+
+.balao {
+  max-width: 78%; padding: 9px 12px; border-radius: 14px;
+  font-size: 14px; line-height: 1.4; white-space: pre-wrap; word-break: break-word;
+}
+.balao.aluno { align-self: flex-end; background: #1f6f4a; color: #f2fbf6; border-bottom-right-radius: 4px; }
+.balao.bot { align-self: flex-start; background: #232833; border-bottom-left-radius: 4px; }
+.balao.digitando { color: var(--suave); font-style: italic; }
+
+.chat form { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--borda); }
+.chat input {
+  flex: 1; min-width: 0; font: inherit; font-size: 14px;
+  color: var(--texto); background: var(--fundo);
+  border: 1px solid var(--borda); border-radius: 9px; padding: 9px 12px;
+}
+
+.dados {
+  background: var(--superficie); border: 1px solid var(--borda);
+  border-radius: 14px; padding: 16px;
+  display: flex; flex-direction: column; gap: 12px;
+  max-height: min(620px, 72vh); overflow-y: auto;
+}
+.topo-dados { display: flex; align-items: center; gap: 8px; }
+.dados h2 { font-size: 13px; font-weight: 600; }
+.dica { color: var(--suave); font-size: 13px; }
+
+.nps { display: flex; align-items: baseline; gap: 8px; color: var(--suave); font-size: 12px; }
+.nps .n { font-size: 30px; font-weight: 600; color: var(--destaque); }
+
+.registro { border-left: 2px solid var(--borda); padding-left: 10px; }
+.registro .rotulo {
+  font-size: 10px; text-transform: uppercase; letter-spacing: .07em; color: var(--suave);
+}
+.registro .valor { font-size: 14px; margin-top: 2px; word-break: break-word; }
+
+.insight { margin-top: 6px; }
+.linha-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.tag {
+  font-size: 10px; padding: 2px 7px; border-radius: 5px;
+  background: #232833; color: var(--suave);
+}
+.tag.s-negativo { background: #3a1d17; color: #f0a07a; }
+.tag.s-positivo { background: #14301f; color: var(--destaque); }
+.tag.urgente { background: #3a2a10; color: var(--alerta); }
+.entidades { font-size: 11px; color: var(--suave); margin-top: 4px; }
+.nota-rodape { font-size: 12px; color: var(--destaque); border-top: 1px solid var(--borda); padding-top: 10px; }
+
+@media (max-width: 860px) {
+  .colunas { grid-template-columns: 1fr; }
+  .chat { height: 58vh; }
+  .dados { max-height: none; }
+}

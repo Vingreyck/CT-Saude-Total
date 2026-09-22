@@ -3,6 +3,8 @@ import { env } from './env.js'
 import { rotasSaude } from './rotas/saude.js'
 import { rotasWebhookWhatsapp } from './rotas/webhook-whatsapp.js'
 import { rotasWebhookEvo } from './rotas/webhook-evo.js'
+import { rotasLaboratorio } from './rotas/laboratorio.js'
+import cors from '@fastify/cors'
 
 const app = Fastify({
   logger: {
@@ -28,9 +30,13 @@ app.addContentTypeParser('application/json', { parseAs: 'string' }, (req, corpo,
   }
 })
 
+// O painel roda em outro dominio, entao precisa de CORS para falar com a api.
+await app.register(cors, { origin: true })
+
 await app.register(rotasSaude)
 await app.register(rotasWebhookWhatsapp, { prefix: '/webhooks' })
 await app.register(rotasWebhookEvo, { prefix: '/webhooks' })
+await app.register(rotasLaboratorio, { prefix: '/lab' })
 
 const encerrar = async (sinal: string) => {
   app.log.info({ sinal }, 'encerrando')
