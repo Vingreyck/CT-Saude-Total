@@ -25,8 +25,24 @@ import {
 
 const BASE = 'https://generativelanguage.googleapis.com/v1beta/models'
 
-const MODELO_CONVERSA = process.env.IA_MODELO_CONVERSA ?? 'gemini-3.8-flash'
-const MODELO_EXTRACAO = process.env.IA_MODELO_EXTRACAO ?? 'gemini-flash-lite-latest'
+/**
+ * Cadeia de modelos, na ordem de preferencia.
+ *
+ * A camada gratuita devolve 503 "high demand" com frequencia. Insistir no
+ * mesmo modelo nao adianta; cair para o proximo resolve na hora. Sem isso o
+ * aluno fica sem resposta por um problema que nao e nosso.
+ */
+const CONVERSA: string[] = process.env.IA_MODELO_CONVERSA
+  ? [process.env.IA_MODELO_CONVERSA]
+  : ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-3.5-flash', 'gemini-2.5-flash-lite']
+
+const EXTRACAO: string[] = process.env.IA_MODELO_EXTRACAO
+  ? [process.env.IA_MODELO_EXTRACAO]
+  : ['gemini-flash-lite-latest', 'gemini-3.5-flash-lite', 'gemini-2.5-flash-lite']
+
+const TRANSITORIO = [429, 500, 502, 503, 504]
+
+const esperar = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 /** Schema no formato que o Gemini aceita, espelhando o ExtracaoSchema do zod. */
 const SCHEMA_EXTRACAO = {
@@ -70,7 +86,34 @@ export class ProvedorGemini implements ProvedorIA {
     }
   }
 
+  /**
+   * Tenta cada modelo da cadeia, com uma repeticao rapida em erro transitorio
+   * antes de desistir daquele modelo e passar para o proximo.
+   */
   private async chamar(
+    modelos: string[],
+    corpo: Record<string, unknown>,
+  ): Promise<{ texto: string; entrada: number; saida: number; modelo: string }> {
+    let ultimo: Error | null = null
+
+    for (const modelo of modelos) {
+      for (let tentativa = 1; tentativa <= 2; tentativa++) {
+        try {
+          const r = await this.chamarUm(modelo, corpo)
+          return { ...r, modelo }
+        } catch (e) {
+          ultimo = e as Error
+          const transitorio = TRANSITORIO.some((c) => (e as Error).message.includes(`gemini ${c}`))
+          if (!transitorio) break // erro nosso: trocar de modelo nao resolve
+          if (tentativa === 1) await esperar(700)
+        }
+      }
+    }
+
+    throw ultimo ?? new Error('gemini: todos os modelos falharam')
+  }
+
+  private async chamarUm(
     modelo: string,
     corpo: Record<string, unknown>,
   ): Promise<{ texto: string; entrada: number; saida: number }> {
@@ -108,7 +151,7 @@ export class ProvedorGemini implements ProvedorIA {
     historico: TurnoConversa[],
     contexto: ContextoConversa,
   ): Promise<RespostaConversa> {
-    const r = await this.chamar(MODELO_CONVERSA, {
+    const r = await this.chamar(CONVERSA, {
       systemInstruction: {
         parts: [{ text: PERSONA }, { text: contextoParaPrompt(contexto) }],
       },
@@ -128,12 +171,12 @@ export class ProvedorGemini implements ProvedorIA {
       texto: r.texto,
       tokensEntrada: r.entrada,
       tokensSaida: r.saida,
-      modelo: MODELO_CONVERSA,
+      modelo: r.modelo,
     }
   }
 
   async extrair(texto: string): Promise<Extracao> {
-    const r = await this.chamar(MODELO_EXTRACAO, {
+    const r = await this.chamar(EXTRACAO, {
       systemInstruction: {
         parts: [
           {
@@ -159,7 +202,7 @@ export class ProvedorGemini implements ProvedorIA {
 
   async classificarIntencao(texto: string): Promise<Intencao> {
     try {
-      const r = await this.chamar(MODELO_EXTRACAO, {
+      const r = await this.chamar(EXTRACAO, {
         systemInstruction: {
           parts: [{ text: 'Classifique a intenção da mensagem de um aluno de academia.' }],
         },
