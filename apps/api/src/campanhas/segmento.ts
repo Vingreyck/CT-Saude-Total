@@ -27,8 +27,16 @@ export type NomeSegmento =
 export const SEGMENTOS: Array<{ nome: NomeSegmento; rotulo: string; descricao: string }> = [
   { nome: 'ativos', rotulo: 'Alunos ativos', descricao: 'Contrato vigente. O público da pesquisa' },
   { nome: 'inativos', rotulo: 'Inativos', descricao: 'Sem contrato vigente, mas não cancelaram' },
-  { nome: 'cancelados', rotulo: 'Cancelados', descricao: 'Para campanha de retorno' },
-  { nome: 'prospects', rotulo: 'Visitaram e não fecharam', descricao: 'Leads do EVO' },
+  {
+    nome: 'cancelados',
+    rotulo: 'Cancelados',
+    descricao: 'Contrato com data de cancelamento. Para campanha de retorno',
+  },
+  {
+    nome: 'prospects',
+    rotulo: 'Visitaram e não fecharam',
+    descricao: 'Leads. Fica em zero até importarmos prospects, que no EVO vêm de outro lugar (CT-015)',
+  },
   { nome: 'aniversariantes', rotulo: 'Aniversariantes de hoje', descricao: 'Recalculado a cada dia' },
   {
     nome: 'ausentes',

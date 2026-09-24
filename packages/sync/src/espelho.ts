@@ -108,7 +108,10 @@ export async function sincronizarComEvo(
   let registro
   try {
     registro = await prisma.sincronizacaoEvo.create({ data: { modo, origem } })
-  } catch {
+  } catch (e) {
+    // So a violacao da trava vira recusa educada. Banco fora do ar tem que
+    // estourar, senao o painel diria "ja esta rodando" para sempre.
+    if ((e as { code?: string })?.code !== 'P2002') throw e
     return {
       rodou: false,
       motivo: 'ja tem uma sincronizacao rodando agora',
@@ -157,13 +160,20 @@ export async function sincronizarComEvo(
 
         const contrato = contratoAtual(m)
 
+        // O EVO so diz "Active" ou "Inactive" no membro: quem cancelou vem
+        // como inativo igual a quem so deixou vencer. A diferenca esta no
+        // contrato, que guarda a data de cancelamento, e ela importa porque
+        // campanha de retorno para quem cancelou tem outro tom.
+        const doEvo = mapearStatus(m.status ?? m.membershipStatus)
+        const status = doEvo !== 'ATIVO' && contrato?.cancelDate ? 'CANCELADO' : doEvo
+
         const espelho = {
           nome: nomeDoMembro(m),
           telefoneE164: tel ? tel.e164 : null,
           telefoneValido: !!tel,
           email: emailDoMembro(m),
           nascimento: m.birthDate ? new Date(m.birthDate) : null,
-          status: mapearStatus(m.status ?? m.membershipStatus),
+          status,
           plano: contrato?.name ?? null,
           inicioContrato: contrato?.startDate ? new Date(contrato.startDate) : null,
           fimContrato: contrato?.endDate ? new Date(contrato.endDate) : null,
