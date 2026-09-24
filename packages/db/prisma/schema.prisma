@@ -188,6 +188,11 @@ model Membro {
   plano          String?
   inicioContrato DateTime?
   fimContrato    DateTime?
+
+  /// Ultima passagem na catraca, vem pronta do EVO em lastAccessDate. Evita
+  /// depender da carga historica de check-in para saber quem sumiu (CT-070).
+  ultimoAcessoEm DateTime?
+
   sincronizadoEm DateTime?
   payloadEvo     Json?
 
@@ -212,6 +217,7 @@ model Membro {
   @@index([status])
   @@index([telefoneE164])
   @@index([unidadeId, status])
+  @@index([ultimoAcessoEm])
   @@map("membro")
 }
 
@@ -237,9 +243,19 @@ model Consentimento {
 // ============================== CONVERSA ===================================
 
 model Conversa {
-  id       String       @id @default(cuid())
-  membroId String
-  canal    CanalContato @default(WHATSAPP)
+  id    String       @id @default(cuid())
+  canal CanalContato @default(WHATSAPP)
+
+  /// Nulo de proposito: quem escreve para o numero da academia nem sempre esta
+  /// na base. Perder essa mensagem seria perder justamente o interessado que
+  /// ainda nao e aluno.
+  membroId String?
+
+  /// O numero de quem escreveu, sempre preenchido no que vem do WhatsApp. E
+  /// por ele que a mensagem seguinte acha a mesma conversa.
+  telefoneE164 String?
+  /// Nome do perfil do WhatsApp. Serve para quem nao esta na base ter cara.
+  nomeContato  String?
 
   /// Fim da janela de 24h de mensagem de servico (gratuita). Depois disso,
   /// so um template pago reabre a conversa.
@@ -258,9 +274,12 @@ model Conversa {
   ultimaMensagemEm DateTime?
   criadoEm         DateTime  @default(now())
 
-  membro    Membro     @relation(fields: [membroId], references: [id], onDelete: Cascade)
+  membro    Membro?    @relation(fields: [membroId], references: [id], onDelete: Cascade)
   mensagens Mensagem[]
 
+  /// Uma conversa por numero. E o que faz a mensagem seguinte cair na mesma
+  /// thread em vez de abrir uma nova a cada webhook.
+  @@unique([canal, telefoneE164])
   @@index([membroId])
   @@index([janelaServicoExpiraEm])
   @@map("conversa")
@@ -464,6 +483,33 @@ model Insight {
   @@index([sentimento])
   @@index([urgencia])
   @@map("insight")
+}
+
+// ============================== SINCRONIZACAO ==============================
+
+/// Uma linha por sincronizacao com o EVO.
+///
+/// Existe por dois motivos praticos: o painel precisa dizer "sincronizado ha
+/// 10 minutos" sem adivinhar, e quando a base divergir alguem vai perguntar
+/// quando foi a ultima vez que rodou e o que ela trouxe.
+model SincronizacaoEvo {
+  id          String    @id @default(cuid())
+  /// "completo" le a base inteira, "incremental" so quem mudou.
+  modo        String
+  /// "cron", "painel" ou "script". Serve para entender consumo de cota.
+  origem      String
+  iniciadaEm  DateTime  @default(now())
+  terminadaEm DateTime?
+
+  lidos       Int @default(0)
+  criados     Int @default(0)
+  atualizados Int @default(0)
+  semTelefone Int @default(0)
+
+  erro String?
+
+  @@index([iniciadaEm])
+  @@map("sincronizacao_evo")
 }
 
 // ============================== RETENCAO ===================================

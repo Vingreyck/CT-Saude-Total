@@ -1,5 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import { prisma } from '@ct/db'
+import { botRespondendo } from '../conversas/receber.js'
+import { entregarMensagem } from '../conversas/responder.js'
 
 /**
  * Caixa de entrada: todas as conversas, ao vivo (CT-046 + CT-063).
@@ -25,12 +27,31 @@ export async function rotasConversas(app: FastifyInstance) {
   app.get('/', async (req) => {
     const { filtro } = req.query as { filtro?: string }
 
+    // "Sem resposta" = a ultima mensagem da conversa e do aluno. Nao da para
+    // dizer isso num where do Prisma, porque depende da ordem dentro da
+    // conversa, entao vai em SQL mesmo. Com o bot desligado, essa e a fila que
+    // importa: e tudo que chegou e ninguem respondeu.
+    const semResposta = await prisma.$queryRaw<Array<{ id: string }>>`
+      SELECT c.id
+      FROM conversa c
+      WHERE (
+        SELECT m.direcao
+        FROM mensagem m
+        WHERE m."conversaId" = c.id
+        ORDER BY m."criadoEm" DESC
+        LIMIT 1
+      ) = 'ENTRADA'
+    `
+    const idsSemResposta = semResposta.map((r) => r.id)
+
     const onde =
       filtro === 'precisa-humano'
         ? { precisaHumano: true }
         : filtro === 'assumidas'
           ? { assumidaPorId: { not: null } }
-          : {}
+          : filtro === 'sem-resposta'
+            ? { id: { in: idsSemResposta } }
+            : {}
 
     const conversas = await prisma.conversa.findMany({
       where: onde,
@@ -49,16 +70,29 @@ export async function rotasConversas(app: FastifyInstance) {
       prisma.conversa.count(),
     ])
 
+    const pendentes = new Set(idsSemResposta)
+
     return {
-      contadores: { precisamHumano, assumidas, total },
+      // A tela precisa saber que o bot esta desligado. Sem isso, uma caixa de
+      // entrada parada parece sistema quebrado, e nao decisao.
+      bot: { respondendo: botRespondendo() },
+      contadores: { precisamHumano, assumidas, semResposta: idsSemResposta.length, total },
       conversas: conversas.map((c) => {
         const ultima = c.mensagens[0]
         return {
           id: c.id,
+          // Quem escreve nem sempre esta na base. Nesse caso vale o nome do
+          // perfil do WhatsApp, e a tela diz que ele nao e aluno.
           membro: c.membro,
+          contato: {
+            nome: c.membro?.nome ?? c.nomeContato ?? c.telefoneE164 ?? 'sem nome',
+            telefone: c.telefoneE164,
+            naBase: !!c.membro,
+          },
           precisaHumano: c.precisaHumano,
           motivoTriagem: c.motivoTriagem,
           assumida: !!c.assumidaPorId,
+          semResposta: pendentes.has(c.id),
           ultimaMensagem: ultima
             ? {
                 de: ultima.direcao === 'ENTRADA' ? 'aluno' : 'bot',
@@ -85,26 +119,34 @@ export async function rotasConversas(app: FastifyInstance) {
     })
     if (!conversa) return reply.code(404).send({ erro: 'conversa não encontrada' })
 
-    const resposta = await prisma.respostaPesquisa.findFirst({
-      where: { membroId: conversa.membroId },
-      orderBy: { iniciadaEm: 'desc' },
-      include: { itens: { include: { pergunta: true, insights: true } } },
-    })
+    // Sem membro nao ha pesquisa nem consentimento para buscar: quem nao esta
+    // na base nao tem contrato, plano nem historico de resposta.
+    const resposta = conversa.membroId
+      ? await prisma.respostaPesquisa.findFirst({
+          where: { membroId: conversa.membroId },
+          orderBy: { iniciadaEm: 'desc' },
+          include: { itens: { include: { pergunta: true, insights: true } } },
+        })
+      : null
 
-    const optOut = await prisma.consentimento.findFirst({
-      where: { membroId: conversa.membroId, status: 'OPT_OUT' },
-    })
+    const optOut = conversa.membroId
+      ? await prisma.consentimento.findFirst({
+          where: { membroId: conversa.membroId, status: 'OPT_OUT' },
+        })
+      : null
 
     return {
       id: conversa.id,
       membro: {
-        id: conversa.membro.id,
-        nome: conversa.membro.nome,
-        plano: conversa.membro.plano,
-        status: conversa.membro.status,
-        telefone: conversa.membro.telefoneE164,
-        desde: conversa.membro.inicioContrato,
+        id: conversa.membro?.id ?? null,
+        nome: conversa.membro?.nome ?? conversa.nomeContato ?? conversa.telefoneE164 ?? 'sem nome',
+        plano: conversa.membro?.plano ?? null,
+        status: conversa.membro?.status ?? null,
+        telefone: conversa.membro?.telefoneE164 ?? conversa.telefoneE164,
+        desde: conversa.membro?.inicioContrato ?? null,
+        naBase: !!conversa.membro,
       },
+      bot: { respondendo: botRespondendo() },
       precisaHumano: conversa.precisaHumano,
       motivoTriagem: conversa.motivoTriagem,
       assumida: !!conversa.assumidaPorId,
@@ -165,9 +207,21 @@ export async function rotasConversas(app: FastifyInstance) {
       data: { conversaId: id, direcao: 'SAIDA', tipo: 'TEXTO', texto: texto.trim() },
     })
 
-    // TODO CT-021: quando o numero real estiver no ar, e aqui que sai para a Meta.
+    // Grava primeiro, manda depois. Se o envio falhar, a tentativa fica
+    // registrada com o erro em vez de sumir, e a atendente ve o que houve.
+    const saida = await entregarMensagem(m.id)
 
-    return { ok: true, mensagemId: m.id }
+    if (!saida.ok) {
+      return reply.code(502).send({ erro: saida.erro ?? 'não consegui entregar', mensagemId: m.id })
+    }
+
+    return {
+      ok: true,
+      mensagemId: m.id,
+      entregue: saida.entregue,
+      // Conversa de laboratorio nao tem telefone: fica so no banco mesmo.
+      aviso: saida.entregue ? null : 'gravado aqui, sem WhatsApp nessa conversa',
+    }
   })
 
   /** Devolve para o bot. */

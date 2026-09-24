@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { normalizarTelefone, podeReceberWhatsapp } from './telefone.js'
+import { normalizarTelefone, podeReceberWhatsapp, variantesTelefone } from './telefone.js'
 
 const e164 = (s: string) => {
   const r = normalizarTelefone(s)
@@ -58,5 +58,24 @@ describe('quem entra no disparo', () => {
     assert.equal(podeReceberWhatsapp('(11) 99999-8888'), true)
     assert.equal(podeReceberWhatsapp('(11) 3333-4444'), false)
     assert.equal(podeReceberWhatsapp(null), false)
+  })
+})
+
+describe('achar a mesma pessoa com o numero gravado de outro jeito', () => {
+  it('celular com nono digito tambem procura sem ele', () => {
+    const formas = variantesTelefone('+5511987654321')
+    assert.ok(formas.includes('+5511987654321'))
+    assert.ok(formas.includes('+551187654321'))
+  })
+
+  it('numero antigo de 8 digitos tambem procura com o nono', () => {
+    // A normalizacao ja devolve o de 9, entao as duas formas tem que sair.
+    const formas = variantesTelefone('+551187654321')
+    assert.ok(formas.includes('+5511987654321'))
+    assert.ok(formas.includes('+551187654321'))
+  })
+
+  it('numero que nao normaliza volta como veio, sem inventar variante', () => {
+    assert.deepEqual(variantesTelefone('+55119'), ['+55119'])
   })
 })

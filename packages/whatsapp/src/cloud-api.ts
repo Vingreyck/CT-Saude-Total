@@ -116,6 +116,7 @@ export class CloudApiWhatsapp implements CanalWhatsapp {
       entry?: Array<{
         changes?: Array<{
           value?: {
+            contacts?: Array<Record<string, any>>
             messages?: Array<Record<string, any>>
             statuses?: Array<Record<string, any>>
           }
@@ -125,6 +126,14 @@ export class CloudApiWhatsapp implements CanalWhatsapp {
 
     for (const entry of p.entry ?? []) {
       for (const change of entry.changes ?? []) {
+        // A Meta manda o nome do perfil fora da mensagem, numa lista propria
+        // de contatos ligada pelo wa_id. E o unico nome que existe para quem
+        // nao esta na base, entao vale o trabalho de cruzar.
+        const nomes = new Map<string, string>()
+        for (const c of change.value?.contacts ?? []) {
+          if (c.wa_id && c.profile?.name) nomes.set(String(c.wa_id), String(c.profile.name))
+        }
+
         for (const m of change.value?.messages ?? []) {
           mensagens.push({
             deE164: `+${m.from}`,
@@ -133,6 +142,7 @@ export class CloudApiWhatsapp implements CanalWhatsapp {
             texto: m.text?.body ?? m.button?.text ?? m.interactive?.list_reply?.title,
             midiaUrl: m.audio?.id ?? m.image?.id ?? m.document?.id,
             recebidaEm: new Date(Number(m.timestamp) * 1000),
+            nomePerfil: nomes.get(String(m.from)),
           })
         }
 

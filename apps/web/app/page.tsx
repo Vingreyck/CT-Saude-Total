@@ -1,4 +1,5 @@
 import { prisma } from '@ct/db'
+import { EstadoEvo } from './EstadoEvo'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,6 +17,7 @@ interface Numeros {
   respostas: number
   nps: number | null
   alertas: number
+  recebidasHoje: number
   erro?: string
 }
 
@@ -33,6 +35,14 @@ async function carregar(): Promise<Numeros> {
 
     const alertas = await prisma.insight.count({ where: { urgencia: 'ALTA' } })
 
+    // Mensagem que chegou hoje e o sinal de vida do numero. Enquanto o bot
+    // estiver desligado, e por aqui que se ve que o webhook esta funcionando.
+    const meiaNoite = new Date()
+    meiaNoite.setHours(0, 0, 0, 0)
+    const recebidasHoje = await prisma.mensagem.count({
+      where: { direcao: 'ENTRADA', criadoEm: { gte: meiaNoite } },
+    })
+
     // NPS = % promotores (9 e 10) menos % detratores (0 a 6).
     let nps: number | null = null
     if (notas.length > 0) {
@@ -41,7 +51,7 @@ async function carregar(): Promise<Numeros> {
       nps = Math.round(((prom - detr) / notas.length) * 100)
     }
 
-    return { ativos, comContato, respostas, nps, alertas }
+    return { ativos, comContato, respostas, nps, alertas, recebidasHoje }
   } catch (e) {
     return {
       ativos: 0,
@@ -49,6 +59,7 @@ async function carregar(): Promise<Numeros> {
       respostas: 0,
       nps: null,
       alertas: 0,
+      recebidasHoje: 0,
       erro: (e as Error).message,
     }
   }
@@ -82,6 +93,8 @@ export default async function Home() {
         </div>
       )}
 
+      <EstadoEvo />
+
       <section className="grade">
         <Cartao rotulo="Alunos ativos" valor={String(n.ativos)} />
         <Cartao
@@ -89,6 +102,7 @@ export default async function Home() {
           valor={String(n.comContato)}
           nota={`${cobertura}% de cobertura`}
         />
+        <Cartao rotulo="Mensagens recebidas hoje" valor={String(n.recebidasHoje)} />
         <Cartao rotulo="Respostas coletadas" valor={String(n.respostas)} />
         <Cartao rotulo="NPS" valor={n.nps === null ? 'sem dado' : String(n.nps)} />
         <Cartao rotulo="Alertas críticos" valor={String(n.alertas)} />

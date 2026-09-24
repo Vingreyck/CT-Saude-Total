@@ -41,6 +41,13 @@ export interface MensagemRecebida {
   texto?: string
   midiaUrl?: string
   recebidaEm: Date
+  /**
+   * Nome do perfil do WhatsApp de quem escreveu.
+   *
+   * E a unica identificacao de quem nao esta na base do EVO. Sem ele, um
+   * interessado que manda mensagem vira so um numero na tela.
+   */
+  nomePerfil?: string
 }
 
 export interface EventoStatus {

@@ -68,3 +68,33 @@ export function podeReceberWhatsapp(bruto: string | null | undefined): boolean {
   const r = normalizarTelefone(bruto)
   return r.valido && r.movel
 }
+
+/**
+ * As formas em que o MESMO celular pode estar gravado.
+ *
+ * O Brasil ganhou o nono digito em 2012 e a base de qualquer academia ficou
+ * com os dois formatos convivendo. O WhatsApp manda o numero do jeito que a
+ * pessoa registrou, o EVO guarda do jeito que a atendente digitou, e os dois
+ * nao batem sempre.
+ *
+ * Sem isso, o aluno escreve e cai como desconhecido, mesmo estando na base
+ * com nome, plano e contrato.
+ */
+export function variantesTelefone(e164: string): string[] {
+  const r = normalizarTelefone(e164)
+  if (!r.valido) return [e164]
+
+  const ddd = r.e164.slice(3, 5)
+  const numero = r.e164.slice(5)
+
+  const formas = new Set<string>([r.e164, e164])
+
+  if (numero.length === 9 && numero.startsWith('9')) {
+    formas.add(`+55${ddd}${numero.slice(1)}`)
+  }
+  if (numero.length === 8) {
+    formas.add(`+55${ddd}9${numero}`)
+  }
+
+  return [...formas]
+}

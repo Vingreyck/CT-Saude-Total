@@ -1,6 +1,8 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify'
 import { criarCanal } from '@ct/whatsapp'
 import { env } from '../env.js'
+import { botRespondendo, receberMensagem, registrarStatus } from '../conversas/receber.js'
+import { responderComBot } from '../conversas/responder.js'
 
 /**
  * Webhook do WhatsApp (CT-022).
@@ -41,14 +43,37 @@ export async function rotasWebhookWhatsapp(app: FastifyInstance) {
       const { mensagens, statuses } = canal.interpretarWebhook(req.body)
 
       for (const m of mensagens) {
-        app.log.info({ de: m.deE164, tipo: m.tipo }, 'mensagem recebida')
-        // TODO CT-022/CT-023: gravar mensagem, renovar janela de 24h,
-        // checar opt-out e enfileirar o turno do bot.
+        const r = await receberMensagem(m)
+
+        if (!r.novo) {
+          // Reenvio da Meta. Ja estava gravada, entao nao ha o que fazer.
+          app.log.debug({ id: m.providerMessageId }, 'webhook repetido, ignorado')
+          continue
+        }
+
+        app.log.info(
+          {
+            de: r.quem,
+            tipo: m.tipo,
+            membro: !!r.membroId,
+            triagem: r.triagem,
+            bot: botRespondendo() ? 'ligado' : 'desligado',
+          },
+          'mensagem recebida',
+        )
+
+        if (!botRespondendo()) continue
+
+        // O bot so entra aqui quando BOT_RESPONDE=sim. Enquanto isso, a
+        // mensagem fica gravada e aparece na caixa de entrada para a equipe.
+        await responderComBot(r, m.texto ?? '')
       }
 
       for (const s of statuses) {
-        app.log.debug({ id: s.providerMessageId, status: s.status }, 'status de entrega')
-        // TODO CT-022: gravar evento_entrega e atualizar a mensagem.
+        const achou = await registrarStatus(s.providerMessageId, s.status, s.erro)
+        if (!achou) {
+          app.log.debug({ id: s.providerMessageId }, 'status de mensagem que nao e nossa')
+        }
       }
     } catch (e) {
       // Erro aqui nunca pode virar 500, senao a Meta reenvia e duplica.

@@ -16,22 +16,31 @@ const API = process.env.NEXT_PUBLIC_API_URL ?? 'https://ctapi-production.up.rail
 
 interface ItemLista {
   id: string
-  membro: { id: string; nome: string; plano: string | null; status: string }
+  membro: { id: string; nome: string; plano: string | null; status: string } | null
+  contato: { nome: string; telefone: string | null; naBase: boolean }
   precisaHumano: boolean
   motivoTriagem: string | null
   assumida: boolean
+  semResposta: boolean
   janelaAberta: boolean
   ultimaMensagem: { de: string; texto: string; em: string } | null
 }
 
 interface Lista {
-  contadores: { precisamHumano: number; assumidas: number; total: number }
+  bot: { respondendo: boolean }
+  contadores: { precisamHumano: number; assumidas: number; semResposta: number; total: number }
   conversas: ItemLista[]
 }
 
 interface Detalhe {
   id: string
-  membro: { nome: string; plano: string | null; status: string; telefone: string | null }
+  membro: {
+    nome: string
+    plano: string | null
+    status: string | null
+    telefone: string | null
+    naBase: boolean
+  }
   precisaHumano: boolean
   motivoTriagem: string | null
   assumida: boolean
@@ -59,7 +68,9 @@ const quandoFoi = (iso: string) => {
 
 export default function Conversas() {
   const [lista, setLista] = useState<Lista | null>(null)
-  const [filtro, setFiltro] = useState<'todas' | 'precisa-humano' | 'assumidas'>('todas')
+  const [filtro, setFiltro] = useState<'todas' | 'sem-resposta' | 'precisa-humano' | 'assumidas'>(
+    'todas',
+  )
   const [abertaId, setAbertaId] = useState<string | null>(null)
   const [detalhe, setDetalhe] = useState<Detalhe | null>(null)
   const [texto, setTexto] = useState('')
@@ -144,10 +155,18 @@ export default function Conversas() {
 
       {erro && <div className="aviso">{erro}</div>}
 
+      {lista && !lista.bot.respondendo && (
+        <div className="aviso">
+          <strong>Bot desligado.</strong> Tudo que chega é gravado e aparece aqui, mas ninguém
+          responde sozinho. Quem responder é a equipe, por esta tela.
+        </div>
+      )}
+
       <nav className="filtros-inbox">
         {(
           [
             ['todas', `Todas${c ? ` (${c.total})` : ''}`],
+            ['sem-resposta', `Sem resposta${c ? ` (${c.semResposta})` : ''}`],
             ['precisa-humano', `Precisam de você${c ? ` (${c.precisamHumano})` : ''}`],
             ['assumidas', `Com a equipe${c ? ` (${c.assumidas})` : ''}`],
           ] as const
@@ -177,7 +196,7 @@ export default function Conversas() {
               onClick={() => setAbertaId(i.id)}
             >
               <div className="linha-topo">
-                <strong>{i.membro.nome}</strong>
+                <strong>{i.contato.nome}</strong>
                 {i.ultimaMensagem && (
                   <span className="quando">{quandoFoi(i.ultimaMensagem.em)}</span>
                 )}
@@ -189,6 +208,8 @@ export default function Conversas() {
               </p>
               <div className="linha-tags">
                 {i.precisaHumano && <span className="tag urgente">{i.motivoTriagem ?? 'precisa de você'}</span>}
+                {!i.contato.naBase && <span className="tag">não está na base</span>}
+                {i.semResposta && !i.precisaHumano && <span className="tag">sem resposta</span>}
                 {i.assumida && <span className="tag">com a equipe</span>}
                 {!i.janelaAberta && <span className="tag">janela fechada</span>}
               </div>
@@ -205,7 +226,11 @@ export default function Conversas() {
                 <div>
                   <strong>{detalhe.membro.nome}</strong>
                   <p className="sub">
-                    {[detalhe.membro.plano, detalhe.membro.status.toLowerCase(), detalhe.membro.telefone]
+                    {[
+                      detalhe.membro.naBase ? detalhe.membro.plano : 'não está na base do EVO',
+                      detalhe.membro.status?.toLowerCase(),
+                      detalhe.membro.telefone,
+                    ]
                       .filter(Boolean)
                       .join(' · ')}
                   </p>

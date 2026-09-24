@@ -125,3 +125,25 @@ export function contratoAtual(m: EvoMembro): EvoMembership | null {
 
   return [...lista].sort((a, b) => (b.startDate ?? '').localeCompare(a.startDate ?? ''))[0] ?? null
 }
+
+/**
+ * Acha o e-mail dentro de `contacts`.
+ *
+ * Mesma historia do telefone: o EVO nao tem campo de e-mail, tudo cai em
+ * `description`. Aqui o criterio e o proprio valor, nao o rotulo: o que tem
+ * arroba e e-mail, diga o contactType o que disser.
+ */
+export function emailDoMembro(m: EvoMembro): string | null {
+  for (const c of m.contacts ?? []) {
+    const valor = (c.description ?? '').trim()
+    if (valor.includes('@') && valor.includes('.')) return valor.toLowerCase()
+  }
+  return null
+}
+
+/** Ultima passagem na catraca, quando o EVO manda. Base do CT-070. */
+export function ultimoAcesso(m: EvoMembro): Date | null {
+  if (!m.lastAccessDate) return null
+  const d = new Date(m.lastAccessDate)
+  return Number.isNaN(d.getTime()) ? null : d
+}

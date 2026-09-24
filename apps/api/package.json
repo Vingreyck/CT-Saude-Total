@@ -10,8 +10,10 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@ct/ai": "*",
     "@ct/db": "*",
     "@ct/shared": "*",
+    "@ct/sync": "*",
     "@ct/whatsapp": "*",
     "@fastify/cors": "^11.3.0",
     "fastify": "^5.2.0",

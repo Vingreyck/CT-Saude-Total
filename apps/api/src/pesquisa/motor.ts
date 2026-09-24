@@ -29,6 +29,14 @@ const ROTATIVAS_POR_ALUNO = 2
 
 export interface ResultadoTurno {
   respostas: string[]
+  /**
+   * Os ids das mensagens de saida que acabaram de ser gravadas.
+   *
+   * Quem manda para o WhatsApp de verdade e a camada de fora, que precisa
+   * voltar em cada linha para anotar o id do provedor. Sem isso nao ha como
+   * saber depois se a mensagem foi entregue.
+   */
+  idsSaida: string[]
   /** Qual regra da triagem agiu, quando agiu. Vai para o painel e o log. */
   triagem?: string
   concluida: boolean
@@ -167,11 +175,17 @@ async function extrairEmSegundoPlano(respostaItemId: string, texto: string) {
 export async function processarMensagem(
   membroId: string,
   texto: string,
+  opcoes: { jaGravada?: boolean } = {},
 ): Promise<ResultadoTurno> {
   const membro = await prisma.membro.findUniqueOrThrow({ where: { id: membroId } })
 
+  const anterior = await prisma.conversa.findFirst({
+    where: { membroId },
+    orderBy: { criadoEm: 'desc' },
+  })
+
   const conversa = await prisma.conversa.upsert({
-    where: { id: (await prisma.conversa.findFirst({ where: { membroId } }))?.id ?? 'novo' },
+    where: { id: anterior?.id ?? 'novo' },
     update: {
       ultimaMensagemEm: new Date(),
       janelaServicoExpiraEm: calcularFimJanelaServico(new Date()),
@@ -183,9 +197,13 @@ export async function processarMensagem(
     },
   })
 
-  await prisma.mensagem.create({
-    data: { conversaId: conversa.id, direcao: 'ENTRADA', tipo: 'TEXTO', texto },
-  })
+  // Quem chega pelo webhook ja foi gravado na entrada, antes de qualquer
+  // decisao. Gravar de novo aqui duplicaria a mensagem na tela.
+  if (!opcoes.jaGravada) {
+    await prisma.mensagem.create({
+      data: { conversaId: conversa.id, direcao: 'ENTRADA', tipo: 'TEXTO', texto },
+    })
+  }
 
   // ---- camada 1: regra deterministica, antes de qualquer chamada de IA ----
   const t = triar(texto)
@@ -226,14 +244,17 @@ export async function processarMensagem(
     }
 
     const saida = t.resposta ?? ''
+    const idsSaida: string[] = []
     if (saida) {
-      await prisma.mensagem.create({
+      const linha = await prisma.mensagem.create({
         data: { conversaId: conversa.id, direcao: 'SAIDA', tipo: 'TEXTO', texto: saida },
       })
+      idsSaida.push(linha.id)
     }
 
     return {
       respostas: saida ? [saida] : [],
+      idsSaida,
       concluida: t.acao === 'opt_out',
       perguntaAtual: null,
       restantes: 0,
@@ -248,6 +269,7 @@ export async function processarMensagem(
   if (conversa.assumidaPorId) {
     return {
       respostas: [],
+      idsSaida: [],
       concluida: false,
       perguntaAtual: null,
       restantes: 0,
@@ -260,11 +282,12 @@ export async function processarMensagem(
   // Conversa ja escalada: o bot nao volta a conduzir pesquisa por conta propria.
   if (conversa.precisaHumano) {
     const aviso = 'já avisei a equipe, alguém te chama aqui. se quiser adiantar alguma coisa pode falar'
-    await prisma.mensagem.create({
+    const linha = await prisma.mensagem.create({
       data: { conversaId: conversa.id, direcao: 'SAIDA', tipo: 'TEXTO', texto: aviso },
     })
     return {
       respostas: [aviso],
+      idsSaida: [linha.id],
       concluida: false,
       perguntaAtual: null,
       restantes: 0,
@@ -390,14 +413,17 @@ export async function processarMensagem(
   // Uma mensagem por turno, de propósito. Ver o comentário no topo do arquivo.
   const limpo = humanizar(bruta.texto, { maxPartes: 1 })
 
+  const idsSaida: string[] = []
   for (const t of limpo.mensagens) {
-    await prisma.mensagem.create({
+    const linha = await prisma.mensagem.create({
       data: { conversaId: conversa.id, direcao: 'SAIDA', tipo: 'TEXTO', texto: t },
     })
+    idsSaida.push(linha.id)
   }
 
   return {
     respostas: limpo.mensagens,
+    idsSaida,
     concluida: !proxima,
     perguntaAtual: proxima?.enunciado ?? null,
     restantes,

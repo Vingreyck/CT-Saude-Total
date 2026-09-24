@@ -10,6 +10,10 @@ import { prisma, type Prisma } from '@ct/db'
  * 2. **Nunca quem está em opt-out.** A checagem é feita no banco, não no
  *    fluxo, e é repetida na hora do envio, porque a pessoa pode ter pedido
  *    para sair entre montar o lote e disparar.
+ *
+ * O segmento de ausentes tem uma terceira: só entra quem tem data de último
+ * acesso. Ausência sem prova de presença anterior não é ausência, é falta de
+ * dado, e mandar "senti sua falta" para quem treinou ontem custa caro.
  */
 
 export type NomeSegmento =
@@ -29,7 +33,7 @@ export const SEGMENTOS: Array<{ nome: NomeSegmento; rotulo: string; descricao: s
   {
     nome: 'ausentes',
     rotulo: 'Sumiram há 3 dias',
-    descricao: 'Sem passar na catraca. Fica em zero até a catraca ser importada (CT-016)',
+    descricao: 'Sem passar na catraca. Usa o último acesso que o próprio EVO informa',
   },
 ]
 
@@ -38,6 +42,10 @@ function filtroObrigatorio(): Prisma.MembroWhereInput {
   return {
     telefoneValido: true,
     telefoneE164: { not: null },
+    // Aluno de teste nunca entra em disparo. Os numeros gerados sao de uma
+    // faixa real de Sao Paulo: um lote montado sem querer sobre a base de
+    // teste manda mensagem da academia para estranhos.
+    NOT: { tags: { has: 'base-teste' } },
     // O opt-out mora em tabela separada, entao a exclusao e por ausencia de
     // registro. `none` garante que ninguem com OPT_OUT entra no lote.
     consentimentos: { none: { status: 'OPT_OUT', canal: 'WHATSAPP' } },
@@ -78,7 +86,13 @@ export async function selecionar(
 ): Promise<Array<{ id: string; nome: string; telefoneE164: string }>> {
   const candidatos = await prisma.membro.findMany({
     where: montarFiltro(segmento),
-    select: { id: true, nome: true, telefoneE164: true, nascimento: true },
+    select: {
+      id: true,
+      nome: true,
+      telefoneE164: true,
+      nascimento: true,
+      ultimoAcessoEm: true,
+    },
   })
 
   let lista = candidatos.filter(
@@ -96,23 +110,23 @@ export async function selecionar(
   }
 
   if (segmento === 'ausentes') {
-    // TRAVA: sem historico de catraca, "quem nao passou" e a base inteira.
-    // Devolver todo mundo aqui faria o disparo de ausencia virar disparo
-    // geral, e o aluno que treinou ontem receberia "senti sua falta".
-    // Melhor devolver vazio ate o CT-016 popular os check-ins.
-    const temCheckin = await prisma.checkin.count()
-    if (temCheckin === 0) return []
-
     const dias = opcoes.diasSemIr ?? 3
     const limite = new Date(Date.now() - dias * 24 * 60 * 60 * 1000)
 
+    // Quem passou na catraca no periodo, pelo historico que importamos.
     const passaram = await prisma.checkin.findMany({
       where: { dataHora: { gte: limite } },
       select: { membroId: true },
       distinct: ['membroId'],
     })
     const quemFoi = new Set(passaram.map((c) => c.membroId))
-    lista = lista.filter((m) => !quemFoi.has(m.id))
+
+    // TRAVA: sem data de ultimo acesso, "quem nao passou" e a base inteira, e
+    // o aluno que treinou ontem receberia "senti sua falta". Entao quem nao
+    // tem essa data simplesmente nao entra: ausencia so conta com prova.
+    lista = lista.filter(
+      (m) => !quemFoi.has(m.id) && !!m.ultimoAcessoEm && m.ultimoAcessoEm < limite,
+    )
   }
 
   return lista.map(({ id, nome, telefoneE164 }) => ({ id, nome, telefoneE164 }))

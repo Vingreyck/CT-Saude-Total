@@ -24,6 +24,15 @@ const Schema = z.object({
   WHATSAPP_APP_SECRET: z.string().optional(),
 
   ANTHROPIC_API_KEY: z.string().optional(),
+
+  /**
+   * O bot so responde sozinho com BOT_RESPONDE=sim.
+   *
+   * Desligado de proposito ate o numero definitivo entrar no ar: enquanto
+   * isso, tudo que chega e gravado e aparece na caixa de entrada, e quem
+   * responde e gente. Ligar depois e trocar uma variavel, nao mexer em codigo.
+   */
+  BOT_RESPONDE: z.enum(['sim', 'nao']).default('nao'),
 })
 
 const resultado = Schema.safeParse(process.env)

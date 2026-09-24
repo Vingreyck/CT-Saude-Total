@@ -12,16 +12,25 @@ import { processarMensagem } from '../pesquisa/motor.js'
  * mesmo filtro de humanizacao. So nao sai para a Meta.
  */
 export async function rotasLaboratorio(app: FastifyInstance) {
-  /** Com quem o dono vai conversar. Pega um aluno de teste qualquer. */
+  /**
+   * Com quem o dono vai conversar.
+   *
+   * Sempre um aluno de teste, nunca um de verdade. Conversar com um aluno real
+   * aqui sujaria a caixa de entrada com uma conversa que nunca existiu e
+   * misturaria dado de brincadeira com dado de gente.
+   *
+   * O idEvo negativo e de proposito: o EVO so usa id positivo, entao nenhum
+   * sync vai achar que esse cadastro e dele e sobrescrever.
+   */
   app.get('/membro', async () => {
     const membro =
       (await prisma.membro.findFirst({
-        where: { tags: { has: 'base-teste' }, status: 'ATIVO', telefoneValido: true },
+        where: { tags: { has: 'base-teste' }, status: 'ATIVO' },
         orderBy: { criadoEm: 'asc' },
-      })) ?? (await prisma.membro.findFirst({ orderBy: { criadoEm: 'asc' } }))
+      })) ?? (await criarAlunoDeTeste())
 
     if (!membro) {
-      return { erro: 'sem alunos no banco. Rode npm run base:gerar' }
+      return { erro: 'sem unidade cadastrada no banco' }
     }
 
     return {
@@ -110,5 +119,31 @@ export async function rotasLaboratorio(app: FastifyInstance) {
     await prisma.conversa.deleteMany({ where: { membroId } })
     await prisma.respostaPesquisa.deleteMany({ where: { membroId } })
     return { ok: true }
+  })
+}
+
+/**
+ * Cria o aluno de teste do laboratorio, se ainda nao existir.
+ *
+ * Sem telefone de proposito: assim ele nunca entra num disparo, por mais
+ * distraido que alguem esteja ao montar uma campanha.
+ */
+async function criarAlunoDeTeste() {
+  const unidade = await prisma.unidade.findFirst()
+  if (!unidade) return null
+
+  return prisma.membro.upsert({
+    where: { idEvo: -1 },
+    update: {},
+    create: {
+      idEvo: -1,
+      unidadeId: unidade.id,
+      nome: 'Aluno de Teste',
+      status: 'ATIVO',
+      plano: 'Mensal',
+      telefoneE164: null,
+      telefoneValido: false,
+      tags: ['base-teste'],
+    },
   })
 }

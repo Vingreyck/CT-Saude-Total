@@ -20,7 +20,7 @@
     "db:migrate": "npm run migrate -w @ct/db",
     "db:studio": "npm run studio -w @ct/db",
     "db:seed": "npm run seed -w @ct/db",
-    "build:packages": "npm run build -w @ct/db -w @ct/shared -w @ct/evo -w @ct/whatsapp -w @ct/ai",
+    "build:packages": "npm run build -w @ct/db -w @ct/shared -w @ct/evo -w @ct/whatsapp -w @ct/ai -w @ct/sync",
     "evo:testar": "tsx scripts/testar-evo.ts",
     "base:gerar": "tsx scripts/gerar-base-teste.ts",
     "base:limpar": "tsx scripts/gerar-base-teste.ts limpar"
