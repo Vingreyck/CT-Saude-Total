@@ -33,7 +33,7 @@ async function main() {
   }
 
   await boss.work(FILAS.SYNC_EVO, sincronizarMembros)
-  await boss.work(FILAS.DISPARO, { batchSize: 5 }, dispararMensagem)
+  await boss.work(FILAS.DISPARO, dispararMensagem)
   await boss.work(FILAS.EXTRACAO, { batchSize: 10 }, extrairInsight)
 
   // --- crons (horario de Sao Paulo) ---------------------------------------
@@ -44,6 +44,11 @@ async function main() {
   // Isso encurta de 24h para 2h a janela em que alguem que cancelou ainda
   // poderia receber campanha, que era o unico motivo real para querer webhook.
   await boss.schedule(FILAS.SYNC_EVO, '0 */2 * * *', {}, { tz: 'America/Sao_Paulo' })
+
+  // Disparo de minuto em minuto. A vazao sai do relogio, nao de um laco
+  // apertado: e o jeito mais simples de respeitar o limite da Meta sem
+  // inventar semaforo distribuido. O job checa sozinho se ha campanha ativa.
+  await boss.schedule(FILAS.DISPARO, '* * * * *', {}, { tz: 'America/Sao_Paulo' })
 
   // Ausencia as 10h: quem nao passa na catraca ha 3 dias (CT-070).
   await boss.work(FILAS.AUSENCIA, verificarAusencias)

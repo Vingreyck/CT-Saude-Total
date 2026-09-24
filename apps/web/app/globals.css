@@ -215,3 +215,37 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--destaque); 
   .lista { max-height: 260px; }
   .thread { height: 62vh; }
 }
+
+/* ---------- campanhas ---------- */
+.aviso.ok { background: #10291b; border-color: var(--destaque); }
+
+.cartao-form {
+  background: var(--superficie); border: 1px solid var(--borda);
+  border-radius: 14px; padding: 18px; margin-bottom: 28px;
+}
+.cartao-form h2 { font-size: 15px; margin-bottom: 14px; }
+.form-campanha { display: flex; flex-direction: column; gap: 12px; max-width: 520px; }
+.form-campanha label { display: flex; flex-direction: column; gap: 4px; }
+.form-campanha label > span { font-size: 12px; color: var(--suave); }
+.form-campanha input, .form-campanha select {
+  font: inherit; font-size: 14px; color: var(--texto); background: var(--fundo);
+  border: 1px solid var(--borda); border-radius: 9px; padding: 9px 11px; width: 100%;
+}
+.form-campanha button { align-self: flex-start; padding: 10px 16px; font-size: 13px; }
+
+.custo {
+  background: var(--fundo); border: 1px solid var(--borda);
+  border-radius: 10px; padding: 12px;
+}
+.custo-linhas { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--suave); }
+.custo-linhas strong { color: var(--destaque); }
+
+.lista-campanhas { display: flex; flex-direction: column; gap: 10px; }
+.cartao-campanha {
+  background: var(--superficie); border: 1px solid var(--borda);
+  border-radius: 12px; padding: 14px;
+}
+.cartao-campanha .linha-topo { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.numeros { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 10px; font-size: 12px; color: var(--suave); }
+.numeros b { color: var(--texto); font-size: 15px; }
+.acoes-campanha { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }

@@ -117,6 +117,18 @@ export default async function Home() {
         >
           Ver todas as conversas
         </a>
+        {' '}
+        <a
+          href="/campanhas"
+          style={{
+            display: 'inline-block', padding: '11px 16px', borderRadius: 10,
+            background: 'var(--superficie)', border: '1px solid var(--borda)',
+            color: 'var(--texto)', fontWeight: 600, textDecoration: 'none', fontSize: 14,
+            marginLeft: 8,
+          }}
+        >
+          Campanhas
+        </a>
         <p style={{ color: 'var(--suave)', fontSize: 13, marginTop: 8 }}>
           Fale como se fosse o aluno e veja a conversa virar dado estruturado, sem WhatsApp.
         </p>
