@@ -25,6 +25,7 @@ packages/
   evo/       client da API do EVO com retry e paginação
   whatsapp/  interface de canal + driver Cloud API
   ai/        provedor de IA, persona e o filtro de humanização
+  sync/      espelho da base do EVO, usado pelo cron e pelo painel
 docs/        visão, backlog, sprints, arquitetura, decisões
 ```
 

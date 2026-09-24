@@ -56,6 +56,34 @@ Pagar R$ 39,90 por mês para reduzir de 2 horas para 2 segundos não se justific
 
 **Reavaliar se:** o dono quiser boas-vindas no momento exato da matrícula, a base crescer muito, ou aparecer reclamação real de ex-aluno recebendo mensagem.
 
+## Decisões tomadas em 24/09/2026
+
+| Decisão | Resultado |
+|---|---|
+| Base do EVO | **Entrou de verdade.** 3.168 alunos lidos numa passada, 1.404 ativos com WhatsApp válido |
+| Bot respondendo | **Desligado** (`BOT_RESPONDE=nao`). Tudo que chega é gravado e aparece na caixa de entrada, mas ninguém responde sozinho |
+| Quem sumiu | Sai do **`lastAccessDate` do próprio EVO**, não da carga histórica de catraca |
+| Base de teste | **Não foi apagada.** Sai das contagens do painel e está fora de qualquer disparo |
+
+### Por que o bot fica calado agora
+
+O caminho inteiro existe e foi escrito: mensagem chega, é gravada, casa com o
+aluno, abre a janela de 24h, passa pela triagem e o opt-out é registrado. O que
+está desligado é só o último passo, responder.
+
+A ordem é essa de propósito. Ligar a resposta automática antes de ver conversa
+real chegando seria deixar o bot falar com aluno sem ninguém nunca ter visto o
+que ele recebe. Com o interruptor desligado, a coleta já acontece e a equipe
+responde pela tela. Ligar depois é trocar uma variável.
+
+### O EVO não separa quem cancelou
+
+Descoberta da carga real: o campo `status` do membro só diz `Active` ou
+`Inactive`. Quem cancelou vem igual a quem deixou o plano vencer, e o segmento
+"cancelados" vinha zerado. A data de cancelamento está no contrato, não no
+membro, e o status agora sai dos dois. Importa porque campanha de retorno para
+quem cancelou tem outro tom.
+
 ## Decisão que ainda é do dono
 
 **A pesquisa vai ser identificada ou anônima?** No WhatsApp o número identifica a pessoa de qualquer jeito. Ver [06](06-pesquisa-satisfacao.md), seção 1.3.
