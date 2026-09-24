@@ -26,7 +26,11 @@ export const SEGMENTOS: Array<{ nome: NomeSegmento; rotulo: string; descricao: s
   { nome: 'cancelados', rotulo: 'Cancelados', descricao: 'Para campanha de retorno' },
   { nome: 'prospects', rotulo: 'Visitaram e não fecharam', descricao: 'Leads do EVO' },
   { nome: 'aniversariantes', rotulo: 'Aniversariantes de hoje', descricao: 'Recalculado a cada dia' },
-  { nome: 'ausentes', rotulo: 'Sumiram há 3 dias', descricao: 'Sem passar na catraca. Depende do CT-016' },
+  {
+    nome: 'ausentes',
+    rotulo: 'Sumiram há 3 dias',
+    descricao: 'Sem passar na catraca. Fica em zero até a catraca ser importada (CT-016)',
+  },
 ]
 
 /** Base obrigatória. Nada nem ninguém monta um lote sem isto. */
@@ -92,6 +96,13 @@ export async function selecionar(
   }
 
   if (segmento === 'ausentes') {
+    // TRAVA: sem historico de catraca, "quem nao passou" e a base inteira.
+    // Devolver todo mundo aqui faria o disparo de ausencia virar disparo
+    // geral, e o aluno que treinou ontem receberia "senti sua falta".
+    // Melhor devolver vazio ate o CT-016 popular os check-ins.
+    const temCheckin = await prisma.checkin.count()
+    if (temCheckin === 0) return []
+
     const dias = opcoes.diasSemIr ?? 3
     const limite = new Date(Date.now() - dias * 24 * 60 * 60 * 1000)
 
