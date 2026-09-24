@@ -1,4 +1,5 @@
 import { prisma } from '@ct/db'
+import { SO_REAIS } from '@ct/sync'
 import { EstadoEvo } from './EstadoEvo'
 
 export const dynamic = 'force-dynamic'
@@ -24,8 +25,10 @@ interface Numeros {
 async function carregar(): Promise<Numeros> {
   try {
     const [ativos, comContato, respostas, notas] = await Promise.all([
-      prisma.membro.count({ where: { status: 'ATIVO' } }),
-      prisma.membro.count({ where: { status: 'ATIVO', telefoneValido: true } }),
+      // Sem os alunos de teste: o painel e do dono e cada numero aqui tem
+      // que ser o numero da academia, nao o da base de brincadeira.
+      prisma.membro.count({ where: { ...SO_REAIS, status: 'ATIVO' } }),
+      prisma.membro.count({ where: { ...SO_REAIS, status: 'ATIVO', telefoneValido: true } }),
       prisma.respostaPesquisa.count({ where: { status: 'CONCLUIDA' } }),
       prisma.respostaPesquisa.findMany({
         where: { nps: { not: null } },

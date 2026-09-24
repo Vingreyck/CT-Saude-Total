@@ -253,12 +253,21 @@ export async function sincronizarComEvo(
   }
 }
 
+/**
+ * Alunos de verdade, sem os de teste.
+ *
+ * O painel e do dono. Somar 400 cadastros de brincadeira ao total faria cada
+ * numero da tela mentir por 400, e numero em que ninguem confia nao serve
+ * para decidir nada.
+ */
+export const SO_REAIS = { NOT: { tags: { has: 'base-teste' } } }
+
 /** O que o painel mostra sobre a conexao com o EVO. */
 export async function estadoDoEspelho() {
   const [total, ativos, comContato, ultima, rodando] = await Promise.all([
-    prisma.membro.count(),
-    prisma.membro.count({ where: { status: 'ATIVO' } }),
-    prisma.membro.count({ where: { status: 'ATIVO', telefoneValido: true } }),
+    prisma.membro.count({ where: SO_REAIS }),
+    prisma.membro.count({ where: { ...SO_REAIS, status: 'ATIVO' } }),
+    prisma.membro.count({ where: { ...SO_REAIS, status: 'ATIVO', telefoneValido: true } }),
     prisma.sincronizacaoEvo.findFirst({
       where: { terminadaEm: { not: null } },
       orderBy: { terminadaEm: 'desc' },
