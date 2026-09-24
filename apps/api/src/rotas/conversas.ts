@@ -89,6 +89,10 @@ export async function rotasConversas(app: FastifyInstance) {
             telefone: c.telefoneE164,
             naBase: !!c.membro,
           },
+          // Sem telefone e conversa do laboratorio, que nunca passou pelo
+          // WhatsApp. Misturar as duas sem dizer qual e qual faria o dono
+          // achar que um teste foi mensagem de aluno.
+          origem: c.telefoneE164 ? 'whatsapp' : 'laboratorio',
           precisaHumano: c.precisaHumano,
           motivoTriagem: c.motivoTriagem,
           assumida: !!c.assumidaPorId,

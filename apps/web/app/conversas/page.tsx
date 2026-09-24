@@ -18,6 +18,7 @@ interface ItemLista {
   id: string
   membro: { id: string; nome: string; plano: string | null; status: string } | null
   contato: { nome: string; telefone: string | null; naBase: boolean }
+  origem: 'whatsapp' | 'laboratorio'
   precisaHumano: boolean
   motivoTriagem: string | null
   assumida: boolean
@@ -209,6 +210,7 @@ export default function Conversas() {
               <div className="linha-tags">
                 {i.precisaHumano && <span className="tag urgente">{i.motivoTriagem ?? 'precisa de você'}</span>}
                 {!i.contato.naBase && <span className="tag">não está na base</span>}
+                {i.origem === 'laboratorio' && <span className="tag">laboratório</span>}
                 {i.semResposta && !i.precisaHumano && <span className="tag">sem resposta</span>}
                 {i.assumida && <span className="tag">com a equipe</span>}
                 {!i.janelaAberta && <span className="tag">janela fechada</span>}
