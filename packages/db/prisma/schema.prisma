@@ -249,6 +249,12 @@ model Conversa {
   assumidaPorId String?
   assumidaEm    DateTime?
 
+  /// A triagem pediu gente: aluno irritado, ou ele mesmo pediu. Enquanto
+  /// estiver true o bot nao conduz pesquisa, so responde o essencial.
+  precisaHumano Boolean @default(false)
+  /// Qual regra da triagem levou a isso. Serve para auditoria e para o painel.
+  motivoTriagem String?
+
   ultimaMensagemEm DateTime?
   criadoEm         DateTime  @default(now())
 

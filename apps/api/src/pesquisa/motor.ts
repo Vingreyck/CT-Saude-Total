@@ -1,5 +1,11 @@
 import { prisma, type Pergunta, type RespostaPesquisa } from '@ct/db'
-import { criarProvedorIA, humanizar, type ContextoConversa } from '@ct/ai'
+import {
+  criarProvedorIA,
+  humanizar,
+  triar,
+  MAX_TENTATIVAS_POR_PERGUNTA,
+  type ContextoConversa,
+} from '@ct/ai'
 import { calcularFimJanelaServico } from '@ct/shared'
 
 /**
@@ -23,6 +29,8 @@ const ROTATIVAS_POR_ALUNO = 2
 
 export interface ResultadoTurno {
   respostas: string[]
+  /** Qual regra da triagem agiu, quando agiu. Vai para o painel e o log. */
+  triagem?: string
   concluida: boolean
   perguntaAtual: string | null
   restantes: number
@@ -179,6 +187,79 @@ export async function processarMensagem(
     data: { conversaId: conversa.id, direcao: 'ENTRADA', tipo: 'TEXTO', texto },
   })
 
+  // ---- camada 1: regra deterministica, antes de qualquer chamada de IA ----
+  const t = triar(texto)
+
+  if (t.acao !== 'seguir') {
+    if (t.acao === 'opt_out') {
+      // Direito do titular pela LGPD. Registrado no banco, nao so no fluxo,
+      // porque e o registro que bloqueia o disparo depois.
+      await prisma.consentimento.upsert({
+        where: {
+          membroId_canal_finalidade: {
+            membroId,
+            canal: 'WHATSAPP',
+            finalidade: 'comunicacao',
+          },
+        },
+        update: { status: 'OPT_OUT', origem: 'pedido do aluno na conversa' },
+        create: {
+          membroId,
+          canal: 'WHATSAPP',
+          status: 'OPT_OUT',
+          finalidade: 'comunicacao',
+          origem: 'pedido do aluno na conversa',
+          textoAceito: texto,
+        },
+      })
+      await prisma.respostaPesquisa.updateMany({
+        where: { membroId, status: { in: ['INICIADA', 'PARCIAL'] } },
+        data: { status: 'ABANDONADA' },
+      })
+    }
+
+    if (t.acao === 'chamar_humano') {
+      await prisma.conversa.update({
+        where: { id: conversa.id },
+        data: { precisaHumano: true, motivoTriagem: t.motivo ?? null },
+      })
+    }
+
+    const saida = t.resposta ?? ''
+    if (saida) {
+      await prisma.mensagem.create({
+        data: { conversaId: conversa.id, direcao: 'SAIDA', tipo: 'TEXTO', texto: saida },
+      })
+    }
+
+    return {
+      respostas: saida ? [saida] : [],
+      concluida: t.acao === 'opt_out',
+      perguntaAtual: null,
+      restantes: 0,
+      capturado: null,
+      regrasDeHumanizacao: [],
+      triagem: t.motivo,
+    }
+  }
+
+  // Conversa ja escalada: o bot nao volta a conduzir pesquisa por conta propria.
+  if (conversa.precisaHumano) {
+    const aviso = 'já avisei a equipe, alguém te chama aqui. se quiser adiantar alguma coisa pode falar'
+    await prisma.mensagem.create({
+      data: { conversaId: conversa.id, direcao: 'SAIDA', tipo: 'TEXTO', texto: aviso },
+    })
+    return {
+      respostas: [aviso],
+      concluida: false,
+      perguntaAtual: null,
+      restantes: 0,
+      capturado: null,
+      regrasDeHumanizacao: [],
+      triagem: 'aguardando equipe',
+    }
+  }
+
   const pesquisa = await prisma.pesquisa.findFirstOrThrow({ where: { ativa: true } })
 
   let resposta = await prisma.respostaPesquisa.findFirst({
@@ -208,9 +289,46 @@ export async function processarMensagem(
 
   if (pendente && !eAbertura) {
     const { valor } = await gravarResposta(resposta, pendente, texto)
+
     if (valor !== '') {
       respondidas.add(pendente.id)
       capturado = { pergunta: pendente.enunciado, valor }
+    } else {
+      // Nao deu para interpretar. Quantas vezes o aluno ja respondeu desde a
+      // ultima captura? Contar mensagens evita coluna nova so para isso.
+      const ultimoItem = await prisma.respostaItem.findFirst({
+        where: { respostaPesquisaId: resposta.id },
+        orderBy: { criadoEm: 'desc' },
+      })
+      const tentativas = await prisma.mensagem.count({
+        where: {
+          conversaId: conversa.id,
+          direcao: 'ENTRADA',
+          criadoEm: { gt: ultimoItem?.criadoEm ?? resposta.iniciadaEm },
+        },
+      })
+
+      if (tentativas >= MAX_TENTATIVAS_POR_PERGUNTA) {
+        // Desiste da pergunta e segue. Insistir na mesma coisa e o jeito mais
+        // rapido de a pessoa abandonar a conversa. O que ela escreveu fica
+        // gravado como texto, entao nada se perde.
+        await prisma.respostaItem.upsert({
+          where: {
+            respostaPesquisaId_perguntaId: {
+              respostaPesquisaId: resposta.id,
+              perguntaId: pendente.id,
+            },
+          },
+          update: { valorTexto: texto },
+          create: {
+            respostaPesquisaId: resposta.id,
+            perguntaId: pendente.id,
+            valorTexto: texto,
+          },
+        })
+        respondidas.add(pendente.id)
+        capturado = { pergunta: pendente.enunciado, valor: texto }
+      }
     }
   }
 

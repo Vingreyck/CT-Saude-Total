@@ -1,6 +1,7 @@
 export * from './provedor.js'
 export * from './persona.js'
 export * from './humanizar.js'
+export * from './triagem.js'
 export * from './fabrica.js'
 export { ProvedorClaude } from './anthropic.js'
 export { ProvedorGemini } from './gemini.js'
