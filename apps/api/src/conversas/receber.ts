@@ -257,16 +257,28 @@ export async function registrarStatus(
   })
 
   // Campanha: entregue conta como entregue no painel de resultado.
+  //
+  // So o alvo mais recente daquela pessoa, nunca todos. Quem esta em duas
+  // campanhas ao mesmo tempo teria as duas marcadas como entregues por causa
+  // de uma mensagem so. O jeito definitivo e a mensagem carregar o alvo que a
+  // gerou, e isso pede coluna nova: fica para quando a primeira campanha real
+  // sair e der para conferir o resultado de ponta a ponta.
   if (novo === 'ENTREGUE' || novo === 'FALHOU') {
     const conversa = await prisma.conversa.findUnique({
       where: { id: mensagem.conversaId },
       select: { membroId: true },
     })
     if (conversa?.membroId) {
-      await prisma.campanhaAlvo.updateMany({
+      const alvo = await prisma.campanhaAlvo.findFirst({
         where: { membroId: conversa.membroId, status: 'ENVIADO' },
-        data: { status: novo === 'ENTREGUE' ? 'ENTREGUE' : 'FALHOU' },
+        orderBy: { enviadoEm: 'desc' },
       })
+      if (alvo) {
+        await prisma.campanhaAlvo.update({
+          where: { id: alvo.id },
+          data: { status: novo === 'ENTREGUE' ? 'ENTREGUE' : 'FALHOU' },
+        })
+      }
     }
   }
 
