@@ -87,14 +87,29 @@ async function acharOuAbrirConversa(
     }
   }
 
-  return prisma.conversa.create({
-    data: {
-      canal: 'WHATSAPP',
-      membroId,
-      telefoneE164: e164,
-      nomeContato: nomePerfil ?? null,
-    },
-  })
+  try {
+    return await prisma.conversa.create({
+      data: {
+        canal: 'WHATSAPP',
+        membroId,
+        telefoneE164: e164,
+        nomeContato: nomePerfil ?? null,
+      },
+    })
+  } catch (e) {
+    // Duas mensagens do mesmo numero no mesmo instante: as duas acham que a
+    // conversa nao existe e as duas tentam criar. O indice unico derruba a
+    // segunda, que entao encontra a que a primeira acabou de abrir.
+    if (!duplicado(e)) throw e
+    return prisma.conversa.findFirstOrThrow({
+      where: { canal: 'WHATSAPP', telefoneE164: e164 },
+    })
+  }
+}
+
+/** Violacao de chave unica do Postgres, pelo codigo do Prisma. */
+function duplicado(e: unknown): boolean {
+  return (e as { code?: string })?.code === 'P2002'
 }
 
 export async function receberMensagem(m: MensagemRecebida): Promise<ResultadoEntrada> {
@@ -121,7 +136,10 @@ export async function receberMensagem(m: MensagemRecebida): Promise<ResultadoEnt
         statusEntrega: 'ENTREGUE',
       },
     })
-  } catch {
+  } catch (e) {
+    // So engole reenvio. Banco fora do ar tem que estourar, senao a mensagem
+    // some sem deixar rastro e ninguem fica sabendo.
+    if (!duplicado(e)) throw e
     return {
       novo: false,
       conversaId: conversa.id,

@@ -155,6 +155,29 @@ A central de ajuda diz que webhook é do plano Pro, mas isso se refere à **aba 
 | Telefone está em `contacts`, não em `cellphone` | O sync não teria achado telefone nenhum |
 | `/api/v1/entries` funciona no Plus | Lembrete de ausência não depende de webhook |
 | Webhook responde no Plus | A recomendação de gastar com o Pro caiu |
+| `lastAccessDate` vem em cada membro | "Quem sumiu" deixou de depender da carga histórica de catraca |
+| E-mail também mora em `contacts` | Mesmo campo `description` do telefone, separado só pela arroba |
+
+## 5.1 Como o espelho roda hoje
+
+A rotina mora em `packages/sync` e dois lugares a disparam:
+
+- **cron do worker**, de 2 em 2 horas, incremental
+- **botão do painel** (`POST /evo/sincronizar`), para quando alguém acabou de
+  cadastrar um aluno e quer ver o nome aparecer
+
+Três decisões que valem registro:
+
+1. **"Desde quando pedir" sai do histórico de sincronização**, não do maior
+   `sincronizadoEm` da tabela de membros. Qualquer linha criada por script de
+   teste já nasce com essa data preenchida, e o sync pularia a carga inicial
+   inteira achando que a base estava em dia.
+2. **Uma sincronização por vez**, garantida por índice único parcial no banco.
+   Duas leituras simultâneas queimariam cota à toa. Linha aberta há mais de 30
+   minutos é dada como morta e liberada.
+3. **Prospects não entram.** Eles vêm de `/api/v1/prospects` com `idProspect`
+   próprio, que pode colidir com `idMember`. Misturar os dois no mesmo campo
+   `idEvo` sobrescreveria aluno com lead. Fica para o CT-015.
 
 ## 6. O que ainda não sei
 

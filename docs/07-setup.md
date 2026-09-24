@@ -114,6 +114,24 @@ A API sobe sem as três de propósito, para dar para ver o sistema de pé antes 
 railway variables --service "@ct/api" --set "EVO_TOKEN=cole-aqui"
 ```
 
+## 3.1 A chave que liga e desliga o bot
+
+`BOT_RESPONDE` vive no serviço `@ct/api`:
+
+| Valor | O que acontece com uma mensagem que chega |
+|---|---|
+| `nao` (padrão) | Grava, casa com o aluno, abre a janela de 24h, registra opt-out e aparece na caixa de entrada. **Ninguém responde sozinho.** |
+| `sim` | Tudo isso e o bot conduz a pesquisa. |
+
+Ligar é uma variável, não é mexer em código:
+
+```bash
+railway variables --service "@ct/api" --set "BOT_RESPONDE=sim"
+```
+
+Desligar a qualquer momento é o mesmo comando com `nao`. O que já estava
+gravado continua gravado: o interruptor decide se responde, nunca se coleta.
+
 ## 4. Antes do primeiro disparo real
 
 Checklist que não é burocracia, é o que evita queimar o número da academia:
