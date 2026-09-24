@@ -144,3 +144,15 @@ describe('rede de seguranca', () => {
     assert.equal(juntar('anotado. Fico feliz em ajudar!'), 'anotado.')
   })
 })
+
+describe('interjeicao reflexa', () => {
+  it('tira o putz do começo', () => {
+    assert.equal(juntar('Putz, que chato isso'), 'que chato isso')
+    assert.equal(juntar('Puts! vou ver isso'), 'vou ver isso')
+  })
+
+  it('não mexe no meio da frase', () => {
+    const t = 'o pessoal falou puts que calor ontem'
+    assert.equal(juntar(t), t)
+  })
+})

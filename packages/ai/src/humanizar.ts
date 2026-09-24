@@ -55,6 +55,9 @@ const FRASES_PROIBIDAS: Array<[RegExp, string]> = [
   [/(agradecemos|agradeço) (o seu|seu|pelo) (contato|feedback|retorno)[^.!?,]*[.!?,]?\s*/gi, 'agradecemos_contato'],
   [/^\s*(resumindo|em resumo|para resumir)[,:]\s*/gim, 'frase_de_resumo'],
   [/posso ajudar em mais (alguma coisa|algo)[?!.]?\s*/gi, 'posso_ajudar_mais'],
+  // Interjeicao reflexa de abertura. O modelo usa como muleta em toda
+  // resposta de reclamacao, e repetida vira tique, nao empatia.
+  [/^\s*(putz|puts|puxa)[,!.\s]+/i, 'interjeicao_reflexa'],
 ]
 
 const EMOJI = /\p{Extended_Pictographic}(️|‍\p{Extended_Pictographic})*/gu
