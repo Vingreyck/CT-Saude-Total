@@ -4,6 +4,7 @@ import { rotasSaude } from './rotas/saude.js'
 import { rotasWebhookWhatsapp } from './rotas/webhook-whatsapp.js'
 import { rotasWebhookEvo } from './rotas/webhook-evo.js'
 import { rotasLaboratorio } from './rotas/laboratorio.js'
+import { rotasConversas } from './rotas/conversas.js'
 import cors from '@fastify/cors'
 
 const app = Fastify({
@@ -37,6 +38,7 @@ await app.register(rotasSaude)
 await app.register(rotasWebhookWhatsapp, { prefix: '/webhooks' })
 await app.register(rotasWebhookEvo, { prefix: '/webhooks' })
 await app.register(rotasLaboratorio, { prefix: '/lab' })
+await app.register(rotasConversas, { prefix: '/conversas' })
 
 const encerrar = async (sinal: string) => {
   app.log.info({ sinal }, 'encerrando')

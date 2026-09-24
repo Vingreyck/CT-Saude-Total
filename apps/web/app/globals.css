@@ -150,3 +150,68 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--destaque); 
   .chat { height: 58vh; }
   .dados { max-height: none; }
 }
+
+/* ---------- caixa de entrada ---------- */
+.inbox header { margin-bottom: 14px; }
+.filtros-inbox { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.chip-filtro {
+  font-size: 12px; border-radius: 999px; padding: 6px 12px;
+  background: transparent; border: 1px solid var(--borda); color: var(--suave);
+}
+.chip-filtro[aria-pressed="true"] {
+  background: var(--destaque); border-color: var(--destaque);
+  color: #08140d; font-weight: 600;
+}
+
+.inbox-grade { display: grid; grid-template-columns: 320px 1fr; gap: 12px; align-items: start; }
+
+.lista {
+  background: var(--superficie); border: 1px solid var(--borda); border-radius: 14px;
+  padding: 8px; display: flex; flex-direction: column; gap: 4px;
+  max-height: min(660px, 76vh); overflow-y: auto;
+}
+.linha {
+  width: 100%; text-align: left; background: transparent; border: 1px solid transparent;
+  border-radius: 10px; padding: 9px 10px; cursor: pointer; display: block;
+}
+.linha:hover { background: var(--fundo); }
+.linha.aberta { background: var(--fundo); border-color: var(--borda); }
+.linha.urgente { border-left: 2px solid var(--alerta); }
+.linha-topo { display: flex; align-items: baseline; gap: 8px; }
+.linha-topo strong { font-size: 13px; }
+.linha .quando { margin-left: auto; font-size: 11px; color: var(--suave); white-space: nowrap; }
+.linha .previa {
+  font-size: 12px; color: var(--suave); margin-top: 2px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.linha .linha-tags { margin-top: 5px; }
+
+.thread {
+  background: var(--superficie); border: 1px solid var(--borda); border-radius: 14px;
+  display: flex; flex-direction: column; height: min(660px, 76vh);
+}
+.thread > .dica { padding: 20px; }
+.thread-topo {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 14px 16px; border-bottom: 1px solid var(--borda);
+}
+.thread-topo strong { font-size: 14px; }
+.thread-topo .sub { font-size: 12px; color: var(--suave); margin-top: 2px; }
+.thread-acoes { margin-left: auto; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.faixa-insights {
+  display: flex; flex-wrap: wrap; gap: 4px;
+  padding: 8px 16px; border-bottom: 1px solid var(--borda);
+}
+.thread form { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--borda); }
+.thread input {
+  flex: 1; min-width: 0; font: inherit; font-size: 14px; color: var(--texto);
+  background: var(--fundo); border: 1px solid var(--borda); border-radius: 9px; padding: 9px 12px;
+}
+.thread input:disabled { opacity: .5; }
+.dica-rodape { font-size: 11px; color: var(--suave); padding: 0 14px 12px; }
+
+@media (max-width: 860px) {
+  .inbox-grade { grid-template-columns: 1fr; }
+  .lista { max-height: 260px; }
+  .thread { height: 62vh; }
+}

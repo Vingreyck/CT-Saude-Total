@@ -243,6 +243,20 @@ export async function processarMensagem(
     }
   }
 
+  // Humano assumiu: o bot fica em silencio total. Mandar qualquer coisa aqui
+  // apareceria por cima da atendente, na frente do aluno.
+  if (conversa.assumidaPorId) {
+    return {
+      respostas: [],
+      concluida: false,
+      perguntaAtual: null,
+      restantes: 0,
+      capturado: null,
+      regrasDeHumanizacao: [],
+      triagem: 'conversa com a equipe',
+    }
+  }
+
   // Conversa ja escalada: o bot nao volta a conduzir pesquisa por conta propria.
   if (conversa.precisaHumano) {
     const aviso = 'já avisei a equipe, alguém te chama aqui. se quiser adiantar alguma coisa pode falar'
